@@ -1,124 +1,160 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    
-    <!-- Cache Control: Force revalidation -->
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-    <meta http-equiv="Pragma" content="no-cache" />
-    <meta http-equiv="Expires" content="0" />
 
-    <title>Kreol Island Tours</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              sey: {
-                blue: '#003D88',
-                yellow: '#FCD856',
-                red: '#D62828',
-                white: '#FFFFFF',
-                green: '#007A3D',
-              },
-              island: {
-                base: '#FDFCF8',      // Warm Eggshell/Sand Background
-                navy: '#0F172A',      // Deep Ocean Text
-                muted: '#64748B',     // Secondary Text
-                sand: '#F2F0E9',      // Component Background / Hover
-                gold: '#F59E0B',      // Elegant Accent
-                terra: '#E11D48',     // Warm Red
-                forest: '#065F46',    // Deep Green
-              }
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Cache Control: Force revalidation -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+
+  <title>Kreol Island Tours</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            sey: {
+              blue: '#003D88',
+              yellow: '#FCD856',
+              red: '#D62828',
+              white: '#FFFFFF',
+              green: '#007A3D',
             },
-            fontFamily: {
-              sans: ['DM Sans', 'system-ui', 'sans-serif'],
-              display: ['Outfit', 'system-ui', 'sans-serif'],
-            },
-            borderRadius: {
-              '4xl': '2rem',
-              '5xl': '2.5rem',
+            island: {
+              base: '#FDFCF8',      // Warm Eggshell/Sand Background
+              navy: '#0F172A',      // Deep Ocean Text
+              muted: '#64748B',     // Secondary Text
+              sand: '#F2F0E9',      // Component Background / Hover
+              gold: '#F59E0B',      // Elegant Accent
+              terra: '#E11D48',     // Warm Red
+              forest: '#065F46',    // Deep Green
             }
+          },
+          fontFamily: {
+            sans: ['DM Sans', 'system-ui', 'sans-serif'],
+            display: ['Outfit', 'system-ui', 'sans-serif'],
+          },
+          borderRadius: {
+            '4xl': '2rem',
+            '5xl': '2.5rem',
           }
         }
       }
-    </script>
-    <style>
-      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Sans:opsz,wght@9..40,400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap');
-      
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Sans:opsz,wght@9..40,400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+    body {
+      font-family: 'DM Sans', 'Inter', sans-serif;
+      background-color: #ffffff;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+      font-family: 'Outfit', sans-serif;
+    }
+
+    /* Smooth Scrolling */
+    html {
+      scroll-behavior: smooth;
+    }
+
+    /* Custom scrollbar for better aesthetics */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #CBD5E1;
+      border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94A3B8;
+    }
+
+    /* --- PROFESSIONAL PRINT STYLES --- */
+    @media print {
+      @page {
+        margin: 10mm;
+        size: auto;
+      }
+
       body {
-        font-family: 'DM Sans', 'Inter', sans-serif;
-        background-color: #ffffff;
-      }
-      
-      h1, h2, h3, h4, h5, h6 {
-        font-family: 'Outfit', sans-serif;
+        background: #ffffff !important;
+        color: black !important;
+        print-color-adjust: economy !important;
+        -webkit-print-color-adjust: economy !important;
       }
 
-      /* Smooth Scrolling */
-      html {
-        scroll-behavior: smooth;
-      }
-      
-      /* Custom scrollbar for better aesthetics */
+      /* Hide all scrollbars in print */
       ::-webkit-scrollbar {
-        width: 6px;
-        height: 6px;
-      }
-      ::-webkit-scrollbar-track {
-        background: transparent;
-      }
-      ::-webkit-scrollbar-thumb {
-        background: #CBD5E1;
-        border-radius: 10px;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: #94A3B8;
+        display: none !important;
       }
 
-      /* --- PROFESSIONAL PRINT STYLES --- */
-      @media print {
-        @page {
-          margin: 10mm;
-          size: auto; 
-        }
-
-        body {
-          background: white !important;
-          print-color-adjust: exact;
-          -webkit-print-color-adjust: exact;
-        }
-
-        /* Hide all non-printable elements by default if needed, 
-           but we use Tailwind 'print:hidden' for specific control */
-        
-        /* Ensure specific containers take up the full page */
-        .print-breakout {
-          position: fixed !important;
-          top: 0 !important;
-          left: 0 !important;
-          width: 100vw !important;
-          height: 100vh !important;
-          z-index: 9999 !important;
-          background: white !important;
-          margin: 0 !important;
-          padding: 20px !important;
-          overflow: visible !important;
-        }
-
-        /* Ensure page breaks don't cut text/rows */
-        tr, td, div {
-          break-inside: avoid;
-        }
-        
-        /* Hide scrollbars in print */
-        ::-webkit-scrollbar {
-          display: none;
-        }
+      /* Ensure specific containers take up the full page and are OPAQUE */
+      .print-breakout {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        z-index: 99999 !important;
+        background: white !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: visible !important;
+        visibility: visible !important;
+        display: block !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
       }
-    </style>
+
+      /* Hide everything else if it's not the breakout or a parent of it */
+      /* This is hard in CSS, so we rely on print:hidden on major UI blocks */
+
+      .print-breakout * {
+        visibility: visible !important;
+      }
+
+      /* Specific fix for background graphics in some browsers */
+      * {
+        background-image: none !important;
+        box-shadow: none !important;
+      }
+
+      /* Allow backgrounds inside the breakout ONLY */
+      .print-breakout,
+      .print-breakout * {
+        box-shadow: none !important;
+        background-image: none !important;
+      }
+
+      /* Ensure table text is black */
+      table {
+        border-collapse: collapse !important;
+      }
+
+      th,
+      td {
+        border-color: #e5e7eb !important;
+      }
+    }
+  </style>
   <script type="importmap">
 {
   "imports": {
@@ -138,8 +174,10 @@
 }
 </script>
 </head>
-  <body class="bg-island-base text-island-navy antialiased selection:bg-island-gold/30">
-    <div id="root"></div>
-    <script type="module" src="/index.tsx"></script>
-  </body>
+
+<body class="bg-island-base text-island-navy antialiased selection:bg-island-gold/30">
+  <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+
 </html>

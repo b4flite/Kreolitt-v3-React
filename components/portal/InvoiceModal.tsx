@@ -14,7 +14,7 @@ interface InvoiceModalProps {
 
 export const InvoiceModal: React.FC<InvoiceModalProps> = ({ invoice, settings, onClose }) => {
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 print:p-0 print:absolute print:inset-0 print-breakout">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 print:inset-0 print-breakout">
             <div className="fixed inset-0 bg-gray-900/60 print:hidden" onClick={onClose}></div>
             <div className="bg-white rounded-xl w-full max-w-2xl relative shadow-2xl flex flex-col max-h-[90vh] overflow-hidden print:shadow-none print:max-h-none print:w-full print:max-w-none print:rounded-none">
                 <div className="bg-gray-50 border-b p-5 flex justify-between items-center print:hidden">
