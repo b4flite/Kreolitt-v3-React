@@ -26,18 +26,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!sessionUser) return null;
 
     try {
-      // Fetch the profile data (role, name) from the 'public.profiles' table
+      console.log(`[Auth] Mapping session for ${sessionUser.email}...`);
+
+      // Fetch the profile data. We select specific fields to be resilient 
+      // if some (like company/address) are missing from the schema.
       const { data: profile, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select('id, email, name, phone, role, created_at')
         .eq('id', sessionUser.id)
         .single();
 
       if (error) {
-        // Audit Fix: Only fallback if it's explicitly a "Not Found" error (new user).
-        // If it's a network error or other issue, throw to prevent security degradation.
         if (error.code === 'PGRST116') {
-          console.warn('Profile not found for authenticated user, creating temporary client profile');
+          console.warn('[Auth] Profile not found, creating temporary profile');
           return {
             id: sessionUser.id,
             email: sessionUser.email!,
@@ -49,30 +50,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw error;
       }
 
+      // Second pass for extended fields (to avoid failing the whole login if these columns don't exist yet)
+      const { data: extProfile } = await supabase
+        .from('profiles')
+        .select('address, company, nationality, vat_number')
+        .eq('id', sessionUser.id)
+        .single();
+
       return {
         id: profile.id,
         email: profile.email,
         name: profile.name,
         phone: profile.phone,
-        address: profile.address,
-        company: profile.company,
-        nationality: profile.nationality,
-        vatNumber: profile.vat_number,
+        address: extProfile?.address,
+        company: extProfile?.company,
+        nationality: extProfile?.nationality,
+        vatNumber: extProfile?.vat_number,
         role: profile.role as UserRole,
         createdAt: profile.created_at,
       };
     } catch (err) {
-      console.error("Error retrieving user profile:", err);
-      // Return null to force a re-login or error state rather than a downgraded 'guest' session
+      console.error("[Auth] mapSessionToUser failed critical path:", err);
       return null;
     }
   };
 
   const refreshUser = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session?.user) {
-      const appUser = await mapSessionToUser(session.user);
-      setUser(appUser);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        const appUser = await mapSessionToUser(session.user);
+        setUser(appUser);
+      }
+    } catch (err) {
+      console.error("[Auth] Refresh failed:", err);
     }
   };
 
@@ -83,51 +94,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return;
 
-      console.log(`[Auth] Event: ${event}`);
+      console.log(`[Auth Listener] Event: ${event}`);
 
       try {
-        switch (event as any) {
-          case 'SIGNED_IN':
-          case 'INITIAL_SESSION':
-          case 'USER_UPDATED':
-            if (session?.user) {
-              const appUser = await mapSessionToUser(session.user);
-              if (mounted) {
-                if (appUser) {
-                  setUser(appUser);
-                } else {
-                  console.error("[Auth] Ghost session detected. Profile fetch failed while session is active. Clearing session...");
-                  await supabase.auth.signOut();
-                  setUser(null);
-                }
+        if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'USER_UPDATED') {
+          if (session?.user) {
+            const appUser = await mapSessionToUser(session.user);
+            if (mounted) {
+              if (appUser) {
+                setUser(appUser);
+              } else {
+                console.warn("[Auth] No profile for active session. Signing out.");
+                await supabase.auth.signOut();
+                setUser(null);
               }
-            } else {
-              if (mounted) setUser(null);
             }
-            break;
-
-          case 'SIGNED_OUT':
+          } else {
             if (mounted) setUser(null);
-            break;
-
-          case 'TOKEN_REFRESH_BROKEN':
-            console.warn("[Auth] Token refresh failed, signing out...");
-            await supabase.auth.signOut();
-            if (mounted) setUser(null);
-            break;
-
-          case 'PASSWORD_RECOVERY':
-            window.location.hash = '/update-password';
-            break;
+          }
+        } else if (event === 'SIGNED_OUT') {
+          if (mounted) setUser(null);
         }
       } catch (err) {
-        console.error("[Auth] Error in onAuthStateChange handler:", err);
+        console.error("[Auth Listener] Error:", err);
       } finally {
         if (mounted) setIsLoading(false);
       }
     });
 
-    // 2. Manual Initial Check (Audit Fix: Ensure isLoading is false even if listener hangs)
+    // 2. Manual Initial Check
     const initAuth = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
@@ -136,7 +131,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (mounted) setUser(appUser);
         }
       } catch (err) {
-        console.error("[Auth] Initial sync failed:", err);
+        console.error("[Auth Init] Failed:", err);
       } finally {
         if (mounted) setIsLoading(false);
       }
@@ -144,13 +139,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     initAuth();
 
-    // 3. Safety Timeout (Final fallback to prevent white/loading screen of death)
+    // 3. Safety Timeout
     const safetyTimeout = setTimeout(() => {
       if (mounted && isLoading) {
-        console.warn("[Auth] Initialization timed out after 5s. Forcing ready state.");
+        console.warn("[Auth Timeout] Forcing ready state.");
         setIsLoading(false);
       }
-    }, 5000);
+    }, 6000);
 
     return () => {
       mounted = false;
@@ -161,85 +156,73 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string): Promise<User> => {
     setIsLoading(true);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      if (!data.user) throw new Error("Login failed");
 
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
-      setIsLoading(false);
-      throw error;
-    }
-
-    if (data.user) {
       const appUser = await mapSessionToUser(data.user);
       if (appUser) {
         setUser(appUser);
         return appUser;
       }
 
-      // SAFETY VALVE: Login succeeded but profile failed.
-      // Clear the session immediately to prevent a stuck state.
       await supabase.auth.signOut();
+      throw new Error("Unable to load user profile. Please try again.");
+    } finally {
       setIsLoading(false);
-      throw new Error("Unable to load user profile. Your session has been cleared. Please try logging in again.");
     }
-
-    throw new Error("Login failed");
   };
 
   const signup = async (email: string, password: string, name: string): Promise<void> => {
     setIsLoading(true);
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          name,
-        }
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { name } }
+      });
+      if (error) throw error;
+      if (data.session) {
+        const appUser = await mapSessionToUser(data.session.user);
+        if (appUser) setUser(appUser);
       }
-    });
-
-    if (error) {
+    } finally {
       setIsLoading(false);
-      throw error;
     }
-
-    if (data.session) {
-      const appUser = await mapSessionToUser(data.session.user);
-      if (appUser) setUser(appUser);
-    }
-
-    setIsLoading(false);
   };
 
   const resetPassword = async (email: string): Promise<void> => {
     setIsLoading(true);
-    // Fix: Use generic origin redirect. HashRouter creates double-hash URL issues 
-    // (e.g. site.com/#/update-password#access_token=...) if deep link is specified.
-    // We rely on onAuthStateChange('PASSWORD_RECOVERY') to handle routing.
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: window.location.origin
-    });
-
-    setIsLoading(false);
-    if (error) throw error;
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin
+      });
+      if (error) throw error;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const updatePassword = async (password: string): Promise<void> => {
     setIsLoading(true);
-    const { error } = await supabase.auth.updateUser({ password });
-    setIsLoading(false);
-    if (error) throw error;
+    try {
+      const { error } = await supabase.auth.updateUser({ password });
+      if (error) throw error;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const logout = async () => {
     setIsLoading(true);
-    await supabase.auth.signOut();
-    setUser(null);
-    setIsLoading(false);
-    window.location.href = '/';
+    try {
+      await supabase.auth.signOut();
+      setUser(null);
+      window.location.href = '/';
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return React.createElement(

@@ -12,6 +12,7 @@ interface EditProfileModalProps {
 export const EditProfileModal: React.FC<EditProfileModalProps> = ({ user, onClose, onUpdate }) => {
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [showPasswordFields, setShowPasswordFields] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     const { register, handleSubmit, formState: { isSubmitting } } = useForm({
@@ -26,7 +27,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ user, onClos
     const onSubmit = async (data: any) => {
         setError(null);
 
-        if (newPassword) {
+        if (showPasswordFields && newPassword) {
             if (newPassword !== confirmPassword) {
                 setError("Passwords do not match");
                 return;
@@ -78,20 +79,30 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ user, onClos
                     </div>
 
                     <div className="pt-4 border-t border-gray-100">
-                        <h4 className="flex items-center text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
-                            <LockClosedIcon className="w-3 h-3 mr-1" /> Password Change (Optional)
-                        </h4>
-                        <p className="text-[10px] text-gray-400 mb-3">Leave blank if you don't want to change your password.</p>
-                        <div className="space-y-3">
-                            <input
-                                type="password"
-                                value={newPassword}
-                                autoComplete="new-password"
-                                onChange={(e) => setNewPassword(e.target.value)}
-                                className="w-full border p-2.5 rounded-lg text-sm"
-                                placeholder="New Password"
-                            />
-                            {newPassword && (
+                        <div className="flex items-center justify-between mb-2">
+                            <h4 className="flex items-center text-xs font-bold text-gray-400 uppercase tracking-wider">
+                                <LockClosedIcon className="w-3 h-3 mr-1" /> Security
+                            </h4>
+                            <button
+                                type="button"
+                                onClick={() => setShowPasswordFields(!showPasswordFields)}
+                                className="text-[10px] text-sey-blue font-bold hover:underline"
+                            >
+                                {showPasswordFields ? 'Cancel' : 'Change Password?'}
+                            </button>
+                        </div>
+
+                        {showPasswordFields && (
+                            <div className="space-y-3 animate-in fade-in slide-in-from-top-1">
+                                <p className="text-[10px] text-gray-400">Enter a new secure password.</p>
+                                <input
+                                    type="password"
+                                    value={newPassword}
+                                    autoComplete="new-password"
+                                    onChange={(e) => setNewPassword(e.target.value)}
+                                    className="w-full border p-2.5 rounded-lg text-sm"
+                                    placeholder="New Password"
+                                />
                                 <input
                                     type="password"
                                     value={confirmPassword}
@@ -100,8 +111,8 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ user, onClos
                                     className="w-full border p-2.5 rounded-lg text-sm"
                                     placeholder="Confirm Password"
                                 />
-                            )}
-                        </div>
+                            </div>
+                        )}
                     </div>
 
                     <div className="flex justify-end gap-3 pt-4 border-t">
@@ -109,7 +120,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ user, onClos
                         <button
                             type="submit"
                             disabled={isSubmitting}
-                            className="px-6 py-2 text-sm text-white bg-sey-blue rounded-lg font-bold shadow-md hover:shadow-lg disabled:opacity-50 transition-all"
+                            className="px-6 py-2 text-sm text-white bg-sey-blue rounded-lg font-bold shadow-md hover:shadow-lg disabled:opacity-50 transition-all focus:ring-2 focus:ring-sey-blue/20"
                         >
                             {isSubmitting ? 'Saving...' : 'Save Changes'}
                         </button>
