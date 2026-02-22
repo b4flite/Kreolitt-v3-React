@@ -20,11 +20,39 @@ if (!supabaseKey || supabaseKey === 'undefined') {
 }
 
 // Hardened client initialization
+const storageKey = `kreol_auth_${projectRef}`;
+
+// Sanitize localStorage before initialization to prevent infinite hangs on corrupted sessions
+const sanitizeAuthStorage = () => {
+  try {
+    const rawSession = localStorage.getItem(storageKey);
+    if (rawSession) {
+      if (rawSession === 'undefined' || rawSession === 'null') {
+        throw new Error("Invalid session string");
+      }
+      const parsed = JSON.parse(rawSession);
+      // Basic validation: A valid session must have an access_token
+      if (!parsed || !parsed.access_token) {
+        throw new Error("Session missing access_token");
+      }
+      console.log(`[Supabase] Valid session found for ${projectRef}`);
+    }
+  } catch (err) {
+    console.warn(`[Supabase] Local session corrupted or invalid. Clearing key: ${storageKey}`, err);
+    localStorage.removeItem(storageKey);
+  }
+};
+
+// Only run in browser environment
+if (typeof window !== 'undefined') {
+  sanitizeAuthStorage();
+}
+
 export const supabase = createClient(supabaseUrl || '', supabaseKey || '', {
   auth: {
     // Audit Fix: Use project-specific storage key to prevent session contamination 
     // when switching projects or environments on the same domain.
-    storageKey: `kreol_auth_${projectRef}`,
+    storageKey,
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true

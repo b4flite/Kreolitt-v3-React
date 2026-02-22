@@ -139,13 +139,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // 2. Manual Initial Check
     const initAuth = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        console.log("[Auth Init] Starting manual session check...");
+        const { data: { session }, error } = await supabase.auth.getSession();
+
+        if (error) {
+          console.error("[Auth Init] getSession error:", error);
+          // If error is persistent, clearing might be needed, but sanitizeAuthStorage should handle corruption
+          setIsLoading(false);
+          return;
+        }
+
         if (session?.user) {
+          console.log("[Auth Init] Active session found for:", session.user.email);
           const appUser = await mapSessionToUser(session.user);
           if (mounted) setUser(appUser);
+        } else {
+          console.log("[Auth Init] No active session.");
         }
       } catch (err) {
-        console.error("[Auth Init] Failed:", err);
+        console.error("[Auth Init] Unexpected failure:", err);
       } finally {
         if (mounted) setIsLoading(false);
       }
@@ -156,7 +168,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // 3. Safety Timeout
     const safetyTimeout = setTimeout(() => {
       if (mounted && isLoading) {
-        console.warn("[Auth Timeout] Forcing ready state.");
+        console.warn("[Auth Timeout] Auth initialization took too long. Forcing ready state.");
         setIsLoading(false);
       }
     }, 6000);
