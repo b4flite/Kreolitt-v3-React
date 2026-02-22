@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.2.11] - 2026-02-22
+### Finalized Professionalism & Stability
+- **Professional Invoice Printing**: Redesigned the entire print system from scratch. Implemented a **Document-First Architecture** using React Portals to isolate the invoice document from the main app root.
+- **Bug Fix**: Resolved "blank page" issues in PDF output by ensuring the print document rendered as a direct child of the `body`, bypassing flex-container clipping.
+- **Security Hardening**: Updated `userService.updateUserProfile` with a restrictive whitelist of allowed columns, preventing "Save" button failures caused by invalid fields (like `password` or missing columns).
+- **Schema Identification**: Identified missing `company` column in the `profiles` table and updated documentation for manual schema correction.
+
 ## [2.2.10] - 2026-02-22
 ### Refined
 - **Professional Print View**: Applied `print:hidden` to all layout headers, sidebars, page banners, and view toggles. This ensures that only the invoice/report content is visible on printed PDFs.
