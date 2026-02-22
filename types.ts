@@ -70,6 +70,7 @@ export interface Invoice {
   id: string;
   bookingId?: string;
   clientName: string;
+  clientAddress?: string;
   date: string;
   subtotal: number;
   taxAmount: number;
@@ -138,6 +139,10 @@ export interface BusinessSettings {
   loginHeroImageUrl?: string;
   loginTitle?: string;
   loginMessage?: string;
+  bankName?: string;
+  accountNumber?: string;
+  swiftCode?: string;
+  accountHolder?: string;
 }
 
 export interface Advert {

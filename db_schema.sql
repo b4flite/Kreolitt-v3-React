@@ -68,6 +68,7 @@ create table if not exists public.invoices (
   id uuid default uuid_generate_v4() primary key,
   booking_id uuid references public.bookings(id) on delete set null,
   client_name text,
+  client_address text,
   date timestamp with time zone default timezone('utc'::text, now()) not null,
   subtotal decimal(10, 2) not null,
   tax_amount decimal(10, 2) not null,
@@ -116,6 +117,10 @@ create table if not exists public.business_settings (
   auto_create_invoice boolean default false,
   enable_email_notifications boolean default true,
   payment_instructions text,
+  bank_name text,
+  account_number text,
+  swift_code text,
+  account_holder text,
   constraint single_row check (id = 1)
 );
 
@@ -128,6 +133,10 @@ alter table public.business_settings add column if not exists show_vat_breakdown
 alter table public.business_settings add column if not exists vat_rate decimal(10, 4) default 0.15;
 alter table public.business_settings add column if not exists eur_rate decimal(10, 4) default 15.2; 
 alter table public.business_settings add column if not exists usd_rate decimal(10, 4) default 14.1;
+alter table public.business_settings add column if not exists bank_name text;
+alter table public.business_settings add column if not exists account_number text;
+alter table public.business_settings add column if not exists swift_code text;
+alter table public.business_settings add column if not exists account_holder text;
 alter table public.business_settings add column if not exists default_transfer_price decimal(10, 2) default 1200;
 alter table public.business_settings add column if not exists default_tour_price decimal(10, 2) default 3000;
 alter table public.business_settings add column if not exists auto_create_invoice boolean default false;
@@ -143,6 +152,7 @@ alter table public.bookings add column if not exists currency text default 'SCR'
 -- Invoices Migrations
 alter table public.invoices add column if not exists items jsonb default '[]'::jsonb;
 alter table public.invoices add column if not exists currency text default 'SCR';
+alter table public.invoices add column if not exists client_address text;
 
 -- Expenses Migrations
 alter table public.expenses add column if not exists currency text default 'SCR';

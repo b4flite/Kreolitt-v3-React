@@ -85,8 +85,23 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ invoice, settings, o
                         </div>
                     </div>
 
+                    {settings?.bankName && (
+                        <div className="mt-8 pt-6 border-t border-gray-100 grid grid-cols-2 gap-4">
+                            <div>
+                                <h4 className="text-[10px] font-black text-gray-400 uppercase mb-2">Bank Details</h4>
+                                <p className="text-xs font-bold text-gray-900">{settings.bankName}</p>
+                                <p className="text-[10px] text-gray-600">Acc: {settings.accountNumber}</p>
+                                <p className="text-[10px] text-gray-600">SWIFT: {settings.swiftCode}</p>
+                            </div>
+                            <div className="text-right">
+                                <h4 className="text-[10px] font-black text-gray-400 uppercase mb-2">Account Holder</h4>
+                                <p className="text-xs font-medium text-gray-900">{settings.accountHolder}</p>
+                            </div>
+                        </div>
+                    )}
+
                     {settings?.paymentInstructions && (
-                        <div className="mt-8 pt-6 border-t border-dashed">
+                        <div className="mt-6 pt-4 border-t border-dashed">
                             <h4 className="text-[10px] font-black text-gray-400 uppercase mb-2">Payment Instructions</h4>
                             <div className="text-xs text-gray-600 whitespace-pre-wrap italic">
                                 {settings.paymentInstructions}
