@@ -1,25 +1,17 @@
 import { createClient } from '@supabase/supabase-js';
 
 // Secure access to Vite environment variables
-const getEnv = (key: string) => {
-  try {
-    const val = (import.meta as any).env?.[key];
-    return val || undefined;
-  } catch (e) {
-    console.warn(`Error accessing environment variable ${key}:`, e);
-    return undefined;
-  }
-};
+// Note: We use static access because Vite's production optimizer 
+// doesn't support dynamic string access for import.meta.env
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY;
 
-const supabaseUrl = getEnv('VITE_SUPABASE_URL');
-const supabaseKey = getEnv('VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY') || getEnv('VITE_SUPABASE_ANON_KEY');
-
-if (!supabaseUrl) {
-  console.error("FATAL: Supabase URL missing. Check your .env file.");
+if (!supabaseUrl || supabaseUrl === 'undefined') {
+  console.error("FATAL: Supabase URL missing. Vite did not bake the URL into this build.");
 }
 
-if (!supabaseKey) {
-  console.error("FATAL: Supabase Anon Key missing. Check your .env file.");
+if (!supabaseKey || supabaseKey === 'undefined') {
+  console.error("FATAL: Supabase Anon Key missing. Vite did not bake the Key into this build.");
 }
 
 // Hardened client initialization
