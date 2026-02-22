@@ -40,19 +40,19 @@ export const userService = {
     if (error) throw error;
   },
 
-  updateUserProfile: async (id: string, updates: {
-    name?: string;
-    phone?: string;
-    address?: string;
-    company?: string;
-    nationality?: string;
-    vatNumber?: string;
-  }): Promise<void> => {
-    // Map vatNumber to vat_number for DB
-    const dbUpdates: any = { ...updates };
-    if (updates.vatNumber) {
-      dbUpdates.vat_number = updates.vatNumber;
-      delete dbUpdates.vatNumber;
+  updateUserProfile: async (id: string, updates: any): Promise<void> => {
+    // Audit Fix: Never send 'password' to the profiles table (it belongs in auth.users)
+    // and filter for known columns to prevent "column does not exist" errors
+    const allowedColumns = ['name', 'phone', 'address', 'company', 'nationality', 'vat_number'];
+
+    const dbUpdates: any = {};
+    if (updates.name) dbUpdates.name = updates.name;
+    if (updates.phone) dbUpdates.phone = updates.phone;
+    if (updates.address) dbUpdates.address = updates.address;
+    if (updates.company) dbUpdates.company = updates.company;
+    if (updates.nationality) dbUpdates.nationality = updates.nationality;
+    if (updates.vatNumber || updates.vat_number) {
+      dbUpdates.vat_number = updates.vatNumber || updates.vat_number;
     }
 
     const { error } = await supabase
