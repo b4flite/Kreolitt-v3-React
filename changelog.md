@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.2.8] - 2024-05-24
+### Professional Refinements
+- **Invoice Printing**: Implemented dedicated print-view styling. Hidden unnecessary UI elements (sidebar, headers, buttons) during printing to ensure a clean, professional invoice document.
+- **Improved Workflow**: Made the "Invoice Generated" status in the Booking Detail Panel clickable, allowing managers to view/print invoices directly from the booking inspector.
+- **Advanced Parity**: Synchronized bank details and client address integration with the modern Next.js version for complete feature parity.
+- **Stability Fix**: Resolved "infinite loading" issue by adding an explicit initial session check and a 5-second safety timeout to the authentication service.
+
 ## [2.2.7] - 2024-05-24
 ### Bug Fix: Booking Visibility
 - **Self-Healing Linking**: Implemented a robust "sync" mechanism that runs automatically when a client visits their portal. This searches for any past "guest" bookings made with their email and links them to their account, fixing issues where sign-up triggers might have missed older data.

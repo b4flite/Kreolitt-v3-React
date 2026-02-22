@@ -14,6 +14,8 @@ import { formatDate, formatCurrency } from '../lib/utils';
 import { BookingFormModal } from '../components/BookingFormModal';
 import { BookingDetailPanel } from '../components/bookings/BookingDetailPanel';
 import { BookingConfirmationModal } from '../components/bookings/BookingConfirmationModal';
+import { InvoiceModal } from '../components/portal/InvoiceModal';
+import { settingsService } from '../services/settingsService';
 
 // --- STAMP STYLE STATUS BADGE ---
 const RenderStatusStamp = ({ status }: { status: BookingStatus }) => {
@@ -130,6 +132,12 @@ const BookingsList: React.FC = () => {
     const [page, setPage] = useState(1);
     const pageSize = 50;
     const [isCreating, setIsCreating] = useState(false);
+    const [viewingInvoice, setViewingInvoice] = useState<any | null>(null);
+
+    const { data: settings } = useQuery({
+        queryKey: ['settings'],
+        queryFn: settingsService.getSettings
+    });
 
     // Data Fetching
     const { data: result, isLoading } = useQuery({
@@ -252,6 +260,15 @@ const BookingsList: React.FC = () => {
                     onInitiateConfirmation={setConfirmingBooking}
                     onGenerateInvoice={(b) => generateInvoiceMutation.mutate(b)}
                     onSaveEdit={(id, data) => updateDetailsMutation.mutate({ id, data })}
+                    onViewInvoice={setViewingInvoice}
+                />
+            )}
+
+            {viewingInvoice && (
+                <InvoiceModal
+                    invoice={viewingInvoice}
+                    settings={settings}
+                    onClose={() => setViewingInvoice(null)}
                 />
             )}
         </div>

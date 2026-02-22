@@ -14,10 +14,10 @@ interface InvoiceModalProps {
 
 export const InvoiceModal: React.FC<InvoiceModalProps> = ({ invoice, settings, onClose }) => {
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="fixed inset-0 bg-gray-900/60" onClick={onClose}></div>
-            <div className="bg-white rounded-xl w-full max-w-2xl relative shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
-                <div className="bg-gray-50 border-b p-5 flex justify-between items-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 print:p-0 print:absolute print:inset-0 print-breakout">
+            <div className="fixed inset-0 bg-gray-900/60 print:hidden" onClick={onClose}></div>
+            <div className="bg-white rounded-xl w-full max-w-2xl relative shadow-2xl flex flex-col max-h-[90vh] overflow-hidden print:shadow-none print:max-h-none print:w-full print:max-w-none print:rounded-none">
+                <div className="bg-gray-50 border-b p-5 flex justify-between items-center print:hidden">
                     <div>
                         <h2 className="text-xl font-bold text-sey-blue uppercase">{invoice.paid ? 'Receipt' : 'Invoice'}</h2>
                         <p className="text-xs text-gray-500 font-mono">#{invoice.id.substring(0, 8).toUpperCase()}</p>
@@ -27,7 +27,7 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ invoice, settings, o
                         <button onClick={onClose} className="p-2 text-gray-400 hover:bg-gray-100 rounded-full"><XMarkIcon className="w-5 h-5" /></button>
                     </div>
                 </div>
-                <div className="p-8 overflow-y-auto flex-1 bg-white">
+                <div className="p-8 overflow-y-auto flex-1 bg-white print:p-0">
                     <div className="flex justify-between mb-10">
                         <div>
                             <p className="text-xs font-bold text-gray-400 uppercase">Billed To</p>

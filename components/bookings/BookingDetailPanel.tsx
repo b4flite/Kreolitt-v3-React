@@ -17,6 +17,7 @@ interface BookingDetailPanelProps {
     onInitiateConfirmation: (booking: Booking) => void;
     onGenerateInvoice: (booking: Booking) => void;
     onSaveEdit: (id: string, data: Partial<Booking>) => void;
+    onViewInvoice?: (invoice: any) => void;
     invoice?: any;
 }
 
@@ -42,6 +43,7 @@ export const BookingDetailPanel: React.FC<BookingDetailPanelProps> = ({
     onInitiateConfirmation,
     onGenerateInvoice,
     onSaveEdit,
+    onViewInvoice,
     invoice
 }) => {
     const [isEditing, setIsEditing] = useState(false);
@@ -289,9 +291,12 @@ export const BookingDetailPanel: React.FC<BookingDetailPanelProps> = ({
                                 </button>
                             )}
                             {invoice && (
-                                <div className="flex items-center px-4 py-2.5 rounded-lg bg-green-50 border border-green-200 text-green-700 text-xs font-bold">
+                                <button
+                                    onClick={() => onViewInvoice?.(invoice)}
+                                    className="flex items-center px-4 py-2.5 rounded-lg bg-green-50 border border-green-200 text-green-700 text-xs font-bold hover:bg-green-100 transition"
+                                >
                                     <CheckCircleIcon className="w-4 h-4 mr-2" /> Invoice Generated
-                                </div>
+                                </button>
                             )}
                             <button onClick={onClose} className="px-6 py-2.5 rounded-lg bg-gray-200 text-gray-800 font-medium hover:bg-gray-300 transition">Close</button>
                         </>

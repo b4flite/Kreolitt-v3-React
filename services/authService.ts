@@ -80,7 +80,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     let mounted = true;
 
     // 1. Set up Auth Listener
-    // We rely primarily on INITIAL_SESSION and SIGNED_IN events to handle both mount and subsequent changes.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return;
 
@@ -97,8 +96,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 if (appUser) {
                   setUser(appUser);
                 } else {
-                  // SAFETY VALVE: Profile load failed but session is active.
-                  // This creates a "stuck" state. We must clear the session to allow a clean retry.
                   console.error("[Auth] Ghost session detected. Profile fetch failed while session is active. Clearing session...");
                   await supabase.auth.signOut();
                   setUser(null);
@@ -120,7 +117,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             break;
 
           case 'PASSWORD_RECOVERY':
-            // Redirect using hash for HashRouter
             window.location.hash = '/update-password';
             break;
         }
@@ -131,9 +127,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     });
 
+    // 2. Manual Initial Check (Audit Fix: Ensure isLoading is false even if listener hangs)
+    const initAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          const appUser = await mapSessionToUser(session.user);
+          if (mounted) setUser(appUser);
+        }
+      } catch (err) {
+        console.error("[Auth] Initial sync failed:", err);
+      } finally {
+        if (mounted) setIsLoading(false);
+      }
+    };
+
+    initAuth();
+
+    // 3. Safety Timeout (Final fallback to prevent white/loading screen of death)
+    const safetyTimeout = setTimeout(() => {
+      if (mounted && isLoading) {
+        console.warn("[Auth] Initialization timed out after 5s. Forcing ready state.");
+        setIsLoading(false);
+      }
+    }, 5000);
+
     return () => {
       mounted = false;
       subscription.unsubscribe();
+      clearTimeout(safetyTimeout);
     };
   }, []);
 

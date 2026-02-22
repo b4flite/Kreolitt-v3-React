@@ -47,7 +47,8 @@ The app strictly follows the Seychelles flag color palette to align with the cli
 ## Security Considerations
 1.  **RBAC:** Route wrappers prevent unauthorized access to pages.
 2.  **Input Sanitization:** Zod schemas ensure data integrity before "sending" to the service layer.
-3.  **Rate Limiting:** A simulated rate limiter is applied to service calls to prevent spamming actions in the client.
+4.  **Stability & Initialization:** `authService.ts` implements a dual-layer initialization check (manual session fetch + lifecycle listener) and a 5-second safety timeout to prevent stuck loading states.
+5.  **Print Optimization:** Uses `@media print` directives and `print:hidden` Tailwind utilities to isolate document content (like Invoices) for professional physical output.
 
 ## Directory Structure
 - `lib/`: Utilities and third-party wrappers.
