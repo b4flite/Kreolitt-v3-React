@@ -320,9 +320,16 @@ create policy "Admin manage services" on public.services for all using (is_admin
 -- Create images bucket if it doesn't exist
 insert into storage.buckets (id, name, public) values ('images', 'images', true) on conflict do nothing;
 
+drop policy if exists "Images are publicly accessible" on storage.objects;
 create policy "Images are publicly accessible" on storage.objects for select using ( bucket_id = 'images' );
+
+drop policy if exists "Admins can upload images" on storage.objects;
 create policy "Admins can upload images" on storage.objects for insert with check ( bucket_id = 'images' and is_admin() );
+
+drop policy if exists "Admins can update images" on storage.objects;
 create policy "Admins can update images" on storage.objects for update using ( bucket_id = 'images' and is_admin() );
+
+drop policy if exists "Admins can delete images" on storage.objects;
 create policy "Admins can delete images" on storage.objects for delete using ( bucket_id = 'images' and is_admin() );
 
 
