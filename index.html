@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <!-- Cache Control: Force revalidation -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+
+    <title>Kreol Island Tours</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              sey: {
+                blue: '#003D88',
+                yellow: '#FCD856',
+                red: '#D62828',
+                white: '#FFFFFF',
+                green: '#007A3D',
+              },
+              island: {
+                base: '#FDFCF8',      // Warm Eggshell/Sand Background
+                navy: '#0F172A',      // Deep Ocean Text
+                muted: '#64748B',     // Secondary Text
+                sand: '#F2F0E9',      // Component Background / Hover
+                gold: '#F59E0B',      // Elegant Accent
+                terra: '#E11D48',     // Warm Red
+                forest: '#065F46',    // Deep Green
+              }
+            },
+            fontFamily: {
+              sans: ['DM Sans', 'system-ui', 'sans-serif'],
+              display: ['Outfit', 'system-ui', 'sans-serif'],
+            },
+            borderRadius: {
+              '4xl': '2rem',
+              '5xl': '2.5rem',
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap');
+      
+      body {
+        font-family: 'DM Sans', sans-serif;
+        background-color: #FDFCF8;
+      }
+      
+      h1, h2, h3, h4, h5, h6 {
+        font-family: 'Outfit', sans-serif;
+      }
+
+      /* Smooth Scrolling */
+      html {
+        scroll-behavior: smooth;
+      }
+      
+      /* Custom scrollbar for better aesthetics */
+      ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #CBD5E1;
+        border-radius: 10px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #94A3B8;
+      }
+
+      /* --- PROFESSIONAL PRINT STYLES --- */
+      @media print {
+        @page {
+          margin: 10mm;
+          size: auto; 
+        }
+
+        body {
+          background: white !important;
+          print-color-adjust: exact;
+          -webkit-print-color-adjust: exact;
+        }
+
+        /* Hide all non-printable elements by default if needed, 
+           but we use Tailwind 'print:hidden' for specific control */
+        
+        /* Ensure specific containers take up the full page */
+        .print-breakout {
+          position: fixed !important;
+          top: 0 !important;
+          left: 0 !important;
+          width: 100vw !important;
+          height: 100vh !important;
+          z-index: 9999 !important;
+          background: white !important;
+          margin: 0 !important;
+          padding: 20px !important;
+          overflow: visible !important;
+        }
+
+        /* Ensure page breaks don't cut text/rows */
+        tr, td, div {
+          break-inside: avoid;
+        }
+        
+        /* Hide scrollbars in print */
+        ::-webkit-scrollbar {
+          display: none;
+        }
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react-router-dom": "https://esm.sh/react-router-dom@6.28.0",
+    "react-dom/client": "https://esm.sh/react-dom@^19.2.4/client",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "@heroicons/react/": "https://esm.sh/@heroicons/react@^2.2.0/",
+    "react/": "https://esm.sh/react@^19.2.4/",
+    "react": "https://esm.sh/react@^19.2.4",
+    "react-hot-toast": "https://esm.sh/react-hot-toast@^2.6.0",
+    "@tanstack/react-query": "https://esm.sh/@tanstack/react-query@^5.90.20",
+    "react-hook-form": "https://esm.sh/react-hook-form@^7.71.1",
+    "@hookform/resolvers/": "https://esm.sh/@hookform/resolvers@^5.2.2/",
+    "zod": "https://esm.sh/zod@^4.3.6",
+    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2.39.7"
+  }
+}
+</script>
+</head>
+  <body class="bg-island-base text-island-navy antialiased selection:bg-island-gold/30">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
