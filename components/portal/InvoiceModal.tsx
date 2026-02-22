@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { Invoice, BusinessSettings } from '../../types';
 import { financeService } from '../../services/financeService';
 import { PrinterIcon, XMarkIcon } from '@heroicons/react/24/outline';
@@ -12,10 +13,10 @@ interface InvoiceModalProps {
 
 export const InvoiceModal: React.FC<InvoiceModalProps> = ({ invoice, settings, onClose }) => {
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 print:inset-0 print-breakout">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 print:p-0">
             <div className="fixed inset-0 bg-gray-900/60 print:hidden" onClick={onClose}></div>
-            <div className="bg-white rounded-xl w-full max-w-2xl relative shadow-2xl flex flex-col max-h-[90vh] overflow-hidden print:shadow-none print:max-h-none print:w-full print:max-w-none print:rounded-none">
-                <div className="bg-gray-50 border-b p-5 flex justify-between items-center print:hidden">
+            <div className="bg-white rounded-xl w-full max-w-2xl relative shadow-2xl flex flex-col max-h-[90vh] overflow-hidden print:hidden">
+                <div className="bg-gray-50 border-b p-5 flex justify-between items-center">
                     <div>
                         <h2 className="text-xl font-bold text-sey-blue uppercase">{invoice.paid ? 'Receipt' : 'Invoice'}</h2>
                         <p className="text-xs text-gray-500 font-mono">#{invoice.id.substring(0, 8).toUpperCase()}</p>
@@ -25,12 +26,11 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ invoice, settings, o
                         <button onClick={onClose} className="p-2 text-gray-400 hover:bg-gray-100 rounded-full"><XMarkIcon className="w-5 h-5" /></button>
                     </div>
                 </div>
-                <div className="p-8 overflow-y-auto flex-1 bg-white print:p-0">
+                <div className="p-8 overflow-y-auto flex-1 bg-white">
                     <div className="flex justify-between mb-10">
                         <div>
                             <p className="text-xs font-bold text-gray-400 uppercase">Billed To</p>
                             <p className="font-bold text-gray-900">{invoice.clientName}</p>
-                            {/* In legacy, clientAddress might not exist or be on User, but Invoice type should allow it */}
                             {(invoice as any).clientAddress && (
                                 <p className="text-xs text-gray-600 mt-1 whitespace-pre-wrap">{(invoice as any).clientAddress}</p>
                             )}
@@ -109,8 +109,11 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ invoice, settings, o
                 </div>
             </div>
 
-            {/* Hidden on screen, shown only on print */}
-            <PrintOnlyInvoice invoice={invoice} settings={settings} />
+            {/* Use Portal to render the print document as a direct child of body */}
+            {createPortal(
+                <PrintOnlyInvoice invoice={invoice} settings={settings} />,
+                document.body
+            )}
         </div>
     );
 };

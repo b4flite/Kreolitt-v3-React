@@ -15,7 +15,7 @@ export const PrintOnlyInvoice: React.FC<PrintOnlyInvoiceProps> = ({ invoice, set
     const { subtotal, taxAmount } = financeService.calculateTotals(invoice.total, settings?.vatRate);
 
     return (
-        <div className="print-document hidden print:block bg-white text-black p-0 m-0 font-serif">
+        <div className="print-only-document bg-white text-black p-0 m-0 font-serif">
             {/* Header Section */}
             <div className="flex justify-between items-start border-b-2 border-black pb-8 mb-10">
                 <div>
