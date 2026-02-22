@@ -26,10 +26,26 @@ const HomePage: React.FC = () => {
   const { user } = useAuth();
   const [externalBookingValues, setExternalBookingValues] = useState<Partial<BookingInput> | undefined>();
 
-  const { data: settings } = useQuery({ queryKey: ['settings'], queryFn: settingsService.getSettings });
-  const { data: adverts } = useQuery({ queryKey: ['adverts'], queryFn: settingsService.getAdverts });
-  const { data: gallery } = useQuery({ queryKey: ['gallery'], queryFn: settingsService.getGallery });
-  const { data: services } = useQuery({ queryKey: ['services-content'], queryFn: settingsService.getServices });
+  const { data: settings } = useQuery({
+    queryKey: ['settings'],
+    queryFn: settingsService.getSettings,
+    staleTime: 60 * 60 * 1000 // 1 hour stale time for settings
+  });
+  const { data: adverts } = useQuery({
+    queryKey: ['adverts'],
+    queryFn: settingsService.getAdverts,
+    staleTime: 30 * 60 * 1000 // 30 minutes for adverts
+  });
+  const { data: gallery } = useQuery({
+    queryKey: ['gallery'],
+    queryFn: settingsService.getGallery,
+    staleTime: 60 * 60 * 1000 // 1 hour for gallery
+  });
+  const { data: services } = useQuery({
+    queryKey: ['services-content'],
+    queryFn: settingsService.getServices,
+    staleTime: 60 * 60 * 1000 // 1 hour for static services list
+  });
 
   const scrollToBooking = () => {
     const el = document.getElementById('booking-form');

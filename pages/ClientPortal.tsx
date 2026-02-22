@@ -83,7 +83,8 @@ const ClientPortal: React.FC = () => {
     // Fetch Business Settings for Invoice Header
     const { data: settings } = useQuery({
         queryKey: ['settings'],
-        queryFn: settingsService.getSettings
+        queryFn: settingsService.getSettings,
+        staleTime: 60 * 60 * 1000 // 1 hour
     });
 
     if (bookingsLoading || invoicesLoading) return <div className="p-8 text-center text-gray-500">Loading your trips...</div>;

@@ -7,11 +7,11 @@ import { AuthProvider } from './services/authService';
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      refetchOnWindowFocus: true,
+      refetchOnWindowFocus: false, // Audit Fix: Save egress by not refetching every time tab is focused
       retry: 1,
       // Audit Fix: Set reasonable cache times to prevent UI flickering and excessive DB reads
-      staleTime: 60 * 1000, // Data stays fresh for 1 minute
-      gcTime: 5 * 60 * 1000, // Unused data is garbage collected after 5 minutes
+      staleTime: 5 * 60 * 1000, // Data stays fresh for 5 minutes (increased from 1m)
+      gcTime: 30 * 60 * 1000,   // Unused data is kept in memory longer
     },
   },
 });

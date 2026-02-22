@@ -49,20 +49,20 @@ const compressImage = (file: File): Promise<Blob> => {
         canvas.height = height;
         const ctx = canvas.getContext('2d');
         if (!ctx) {
-            reject(new Error("Browser does not support canvas image compression"));
-            return;
+          reject(new Error("Browser does not support canvas image compression"));
+          return;
         }
         ctx.drawImage(img, 0, 0, width, height);
 
         canvas.toBlob(
           (blob) => {
             if (blob) {
-                resolve(blob);
+              resolve(blob);
             } else {
-                reject(new Error("Image compression failed"));
+              reject(new Error("Image compression failed"));
             }
           },
-          'image/webp', 
+          'image/webp',
           quality
         );
       };
@@ -75,67 +75,67 @@ const compressImage = (file: File): Promise<Blob> => {
 export const settingsService = {
   uploadImage: async (file: File): Promise<string> => {
     try {
-        const compressedBlob = await compressImage(file);
-        const fileExt = 'webp'; 
-        const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
-        const filePath = `${fileName}`;
+      const compressedBlob = await compressImage(file);
+      const fileExt = 'webp';
+      const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const filePath = `${fileName}`;
 
-        // Upload requires auth
-        const { error: uploadError } = await supabase.storage
-          .from('images')
-          .upload(filePath, compressedBlob, {
-              contentType: 'image/webp',
-              cacheControl: '3600',
-              upsert: false
-          });
+      // Upload requires auth
+      const { error: uploadError } = await supabase.storage
+        .from('images')
+        .upload(filePath, compressedBlob, {
+          contentType: 'image/webp',
+          cacheControl: '604800', // 7 days cache to save egress
+          upsert: false
+        });
 
-        if (uploadError) throw uploadError;
+      if (uploadError) throw uploadError;
 
-        const { data } = supabase.storage.from('images').getPublicUrl(filePath);
-        return data.publicUrl;
+      const { data } = supabase.storage.from('images').getPublicUrl(filePath);
+      return data.publicUrl;
     } catch (error) {
-        console.error("Upload failed:", error);
-        throw error;
+      console.error("Upload failed:", error);
+      throw error;
     }
   },
 
   getSettings: async (): Promise<BusinessSettings> => {
     // Audit Fix: Use standard client. RLS allows 'anon' select access.
     try {
-        const { data, error } = await supabase
+      const { data, error } = await supabase
         .from('business_settings')
         .select('*')
         .eq('id', 1)
         .single();
-        
-        if (!error && data) {
-            return {
-                name: data.name,
-                tagline: data.tagline,
-                email: data.email,
-                phone: data.phone,
-                address: data.address,
-                about: data.about,
-                vatRate: Number(data.vat_rate ?? DEFAULT_SETTINGS.vatRate),
-                eurRate: Number(data.eur_rate ?? DEFAULT_SETTINGS.eurRate),
-                usdRate: Number(data.usd_rate ?? DEFAULT_SETTINGS.usdRate),
-                defaultTransferPrice: Number(data.default_transfer_price ?? DEFAULT_SETTINGS.defaultTransferPrice),
-                defaultTourPrice: Number(data.default_tour_price ?? DEFAULT_SETTINGS.defaultTourPrice),
-                showVatBreakdown: data.show_vat_breakdown ?? DEFAULT_SETTINGS.showVatBreakdown,
-                autoCreateInvoice: data.auto_create_invoice ?? DEFAULT_SETTINGS.autoCreateInvoice,
-                enableEmailNotifications: data.enable_email_notifications ?? DEFAULT_SETTINGS.enableEmailNotifications,
-                paymentInstructions: data.payment_instructions || DEFAULT_SETTINGS.paymentInstructions,
-                heroImageUrl: data.hero_image_url || DEFAULT_HERO_IMAGE_URL,
-                logoUrl: data.logo_url,
-                loginHeroImageUrl: data.login_hero_image_url || DEFAULT_HERO_IMAGE_URL,
-                loginTitle: data.login_title || DEFAULT_SETTINGS.loginTitle,
-                loginMessage: data.login_message || DEFAULT_SETTINGS.loginMessage
-            };
-        }
+
+      if (!error && data) {
+        return {
+          name: data.name,
+          tagline: data.tagline,
+          email: data.email,
+          phone: data.phone,
+          address: data.address,
+          about: data.about,
+          vatRate: Number(data.vat_rate ?? DEFAULT_SETTINGS.vatRate),
+          eurRate: Number(data.eur_rate ?? DEFAULT_SETTINGS.eurRate),
+          usdRate: Number(data.usd_rate ?? DEFAULT_SETTINGS.usdRate),
+          defaultTransferPrice: Number(data.default_transfer_price ?? DEFAULT_SETTINGS.defaultTransferPrice),
+          defaultTourPrice: Number(data.default_tour_price ?? DEFAULT_SETTINGS.defaultTourPrice),
+          showVatBreakdown: data.show_vat_breakdown ?? DEFAULT_SETTINGS.showVatBreakdown,
+          autoCreateInvoice: data.auto_create_invoice ?? DEFAULT_SETTINGS.autoCreateInvoice,
+          enableEmailNotifications: data.enable_email_notifications ?? DEFAULT_SETTINGS.enableEmailNotifications,
+          paymentInstructions: data.payment_instructions || DEFAULT_SETTINGS.paymentInstructions,
+          heroImageUrl: data.hero_image_url || DEFAULT_HERO_IMAGE_URL,
+          logoUrl: data.logo_url,
+          loginHeroImageUrl: data.login_hero_image_url || DEFAULT_HERO_IMAGE_URL,
+          loginTitle: data.login_title || DEFAULT_SETTINGS.loginTitle,
+          loginMessage: data.login_message || DEFAULT_SETTINGS.loginMessage
+        };
+      }
     } catch (e) {
-        console.error("Settings fetch failed", e);
+      console.error("Settings fetch failed", e);
     }
-    
+
     return DEFAULT_SETTINGS;
   },
 
@@ -167,8 +167,8 @@ export const settingsService = {
       .eq('id', 1);
 
     if (error) {
-        console.error("Supabase settings update error:", error);
-        throw error;
+      console.error("Supabase settings update error:", error);
+      throw error;
     }
     return settings;
   },
@@ -176,93 +176,93 @@ export const settingsService = {
   // --- ADVERTS ---
   getAdverts: async (): Promise<Advert[]> => {
     const { data, error } = await supabase.from('adverts').select('*').order('created_at', { ascending: false });
-    if(error) throw error;
+    if (error) throw error;
     return data.map((d: any) => ({
-        id: d.id,
-        title: d.title,
-        description: d.description,
-        imageUrl: d.image_url,
-        price: d.price,
-        active: d.active
+      id: d.id,
+      title: d.title,
+      description: d.description,
+      imageUrl: d.image_url,
+      price: d.price,
+      active: d.active
     }));
   },
 
   addAdvert: async (advert: Omit<Advert, 'id'>): Promise<Advert> => {
     const { data, error } = await supabase.from('adverts').insert({
-        title: advert.title,
-        description: advert.description,
-        image_url: advert.imageUrl,
-        price: advert.price,
-        active: advert.active
+      title: advert.title,
+      description: advert.description,
+      image_url: advert.imageUrl,
+      price: advert.price,
+      active: advert.active
     }).select().single();
-    if(error) throw error;
+    if (error) throw error;
     return {
-        id: data.id,
-        title: data.title,
-        description: data.description,
-        imageUrl: data.image_url,
-        price: data.price,
-        active: data.active
+      id: data.id,
+      title: data.title,
+      description: data.description,
+      imageUrl: data.image_url,
+      price: data.price,
+      active: data.active
     };
   },
 
   updateAdvert: async (advert: Advert): Promise<Advert> => {
     const { data, error } = await supabase.from('adverts').update({
-        title: advert.title,
-        description: advert.description,
-        image_url: advert.imageUrl,
-        price: advert.price,
-        active: advert.active
+      title: advert.title,
+      description: advert.description,
+      image_url: advert.imageUrl,
+      price: advert.price,
+      active: advert.active
     }).eq('id', advert.id).select().single();
-    if(error) throw error;
+    if (error) throw error;
     return {
-        id: data.id,
-        title: data.title,
-        description: data.description,
-        imageUrl: data.image_url,
-        price: data.price,
-        active: data.active
+      id: data.id,
+      title: data.title,
+      description: data.description,
+      imageUrl: data.image_url,
+      price: data.price,
+      active: data.active
     };
   },
 
   deleteAdvert: async (id: string): Promise<void> => {
     const { error } = await supabase.from('adverts').delete().eq('id', id);
-    if(error) throw error;
+    if (error) throw error;
   },
 
   // --- GALLERY ---
   getGallery: async (): Promise<GalleryImage[]> => {
     const { data, error } = await supabase.from('gallery').select('*');
-    if(error) throw error;
+    if (error) throw error;
     return data.map((d: any) => ({
-        id: d.id,
-        imageUrl: d.image_url,
-        caption: d.caption
+      id: d.id,
+      imageUrl: d.image_url,
+      caption: d.caption
     }));
   },
 
   addGalleryImage: async (image: Omit<GalleryImage, 'id'>): Promise<GalleryImage> => {
     const { data, error } = await supabase.from('gallery').insert({
-        image_url: image.imageUrl,
-        caption: image.caption
+      image_url: image.imageUrl,
+      caption: image.caption
     }).select().single();
-    if(error) throw error;
+    if (error) throw error;
     return {
-        id: data.id,
-        imageUrl: data.image_url,
-        caption: data.caption
+      id: data.id,
+      imageUrl: data.image_url,
+      caption: data.caption
     };
   },
 
   deleteGalleryImage: async (id: string): Promise<void> => {
     const { error } = await supabase.from('gallery').delete().eq('id', id);
-    if(error) throw error;
+    if (error) throw error;
   },
 
   // --- SERVICES CMS ---
   getServices: async (): Promise<ServiceContent[]> => {
     const { data, error } = await supabase.from('services').select('*').order('created_at', { ascending: true });
-    if(error) throw error;
+    if (error) throw error;
     return data.map((d: any) => ({
       id: d.id,
       title: d.title,
@@ -281,7 +281,7 @@ export const settingsService = {
       price: service.price,
       show_price: service.showPrice
     }).select().single();
-    if(error) throw error;
+    if (error) throw error;
     return {
       id: data.id,
       title: data.title,
@@ -300,7 +300,7 @@ export const settingsService = {
       price: service.price,
       show_price: service.showPrice
     }).eq('id', service.id).select().single();
-    if(error) throw error;
+    if (error) throw error;
     return {
       id: data.id,
       title: data.title,
@@ -313,6 +313,6 @@ export const settingsService = {
 
   deleteService: async (id: string): Promise<void> => {
     const { error } = await supabase.from('services').delete().eq('id', id);
-    if(error) throw error;
+    if (error) throw error;
   }
 };
