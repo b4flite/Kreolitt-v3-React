@@ -1,10 +1,8 @@
 import React from 'react';
 import { Invoice, BusinessSettings } from '../../types';
 import { financeService } from '../../services/financeService';
-import {
-    PrinterIcon,
-    XMarkIcon,
-} from '@heroicons/react/24/outline';
+import { PrinterIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { PrintOnlyInvoice } from './PrintOnlyInvoice';
 
 interface InvoiceModalProps {
     invoice: Invoice;
@@ -110,6 +108,9 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ invoice, settings, o
                     )}
                 </div>
             </div>
+
+            {/* Hidden on screen, shown only on print */}
+            <PrintOnlyInvoice invoice={invoice} settings={settings} />
         </div>
     );
 };
