@@ -8,7 +8,11 @@ export interface User {
   id: string;
   email: string;
   name: string;
-  phone?: string; // Added phone field
+  phone?: string;
+  address?: string;
+  company?: string;
+  nationality?: string;
+  vatNumber?: string;
   role: UserRole;
   createdAt: string;
 }
@@ -40,8 +44,8 @@ export interface Booking {
   id: string;
   clientId: string;
   clientName: string;
-  email?: string; 
-  phone?: string; 
+  email?: string;
+  phone?: string;
   serviceType: ServiceType;
   pickupLocation: string;
   dropoffLocation: string;
@@ -65,14 +69,14 @@ export interface InvoiceItem {
 export interface Invoice {
   id: string;
   bookingId?: string;
-  clientName: string; 
+  clientName: string;
   date: string;
   subtotal: number;
-  taxAmount: number; 
+  taxAmount: number;
   total: number;
   paid: boolean;
   currency: CurrencyCode;
-  items: InvoiceItem[]; 
+  items: InvoiceItem[];
 }
 
 export enum ExpenseCategory {
@@ -81,7 +85,7 @@ export enum ExpenseCategory {
   SALARY = 'SALARY',
   MARKETING = 'MARKETING',
   OFFICE = 'OFFICE',
-  LICENSES = 'LICENSES', 
+  LICENSES = 'LICENSES',
   OTHER = 'OTHER'
 }
 
@@ -92,25 +96,25 @@ export interface Expense {
   description: string;
   amount: number;
   currency: CurrencyCode; // Expenses are usually in local SCR but can be foreign
-  vatIncluded: boolean; 
-  vatAmount: number; 
+  vatIncluded: boolean;
+  vatAmount: number;
   reference?: string;
-  bookingId?: string; 
+  bookingId?: string;
 }
 
 export interface BookingInput {
   clientName: string;
   email: string;
-  phone?: string; 
+  phone?: string;
   serviceType: ServiceType;
   pickupLocation: string;
   dropoffLocation: string;
   pickupTime: string;
   pax: number;
-  amount?: number; 
+  amount?: number;
   currency?: CurrencyCode; // Added for creation
   notes?: string;
-  status?: BookingStatus; 
+  status?: BookingStatus;
 }
 
 export interface BusinessSettings {
@@ -120,20 +124,20 @@ export interface BusinessSettings {
   phone: string;
   address: string;
   about: string;
-  vatRate: number; 
+  vatRate: number;
   eurRate: number; // Added: 1 EUR = X SCR
   usdRate: number; // Added: 1 USD = X SCR
   defaultTransferPrice: number; // Audit Fix: Dynamic Pricing
   defaultTourPrice: number;     // Audit Fix: Dynamic Pricing
-  showVatBreakdown: boolean; 
-  autoCreateInvoice: boolean; 
-  enableEmailNotifications: boolean; 
-  paymentInstructions?: string; 
+  showVatBreakdown: boolean;
+  autoCreateInvoice: boolean;
+  enableEmailNotifications: boolean;
+  paymentInstructions?: string;
   heroImageUrl?: string;
-  logoUrl?: string; 
-  loginHeroImageUrl?: string; 
-  loginTitle?: string; 
-  loginMessage?: string; 
+  logoUrl?: string;
+  loginHeroImageUrl?: string;
+  loginTitle?: string;
+  loginMessage?: string;
 }
 
 export interface Advert {
@@ -161,6 +165,6 @@ export interface ServiceContent {
 }
 
 export const SEYCHELLES_VAT_RATE_DEFAULT = 0.15;
-export const SEYCHELLES_BUSINESS_TAX_THRESHOLD = 1000000; 
-export const SEYCHELLES_BUSINESS_TAX_RATE = 0.25; 
+export const SEYCHELLES_BUSINESS_TAX_THRESHOLD = 1000000;
+export const SEYCHELLES_BUSINESS_TAX_RATE = 0.25;
 export const DEFAULT_HERO_IMAGE_URL = "";

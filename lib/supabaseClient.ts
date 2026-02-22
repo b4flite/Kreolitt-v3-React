@@ -1,22 +1,36 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Access environment variables directly to ensure Vite/Bundlers replace them statically at build time.
-// Dynamic access (e.g. import.meta.env[key]) often fails to be replaced in production builds.
-// Audit Fix: Use optional chaining to prevent runtime crashes if import.meta.env is undefined.
-const supabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL || 'https://iezlmplizekdrlktbaat.supabase.co';
-const supabaseKey = (import.meta as any).env?.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY || 'sb_publishable_LmWckIYopJ7hI2xcciNmsQ_U9ntX5qg';
+// Secure access to Vite environment variables
+const getEnv = (key: string) => {
+  try {
+    const val = (import.meta as any).env?.[key];
+    return val || undefined;
+  } catch (e) {
+    console.warn(`Error accessing environment variable ${key}:`, e);
+    return undefined;
+  }
+};
 
-if (!supabaseUrl || !supabaseKey) {
-  throw new Error("Missing Supabase credentials. Please check your configuration.");
+const supabaseUrl = getEnv('VITE_SUPABASE_URL');
+const supabaseKey = getEnv('VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY') || getEnv('VITE_SUPABASE_ANON_KEY');
+
+if (!supabaseUrl) {
+  console.error("FATAL: Supabase URL missing. Check your .env file.");
 }
 
-// Standard client for all operations (Auth & Public)
-// RLS policies on the backend determine access rights (Anon vs Authenticated)
-export const supabase = createClient(supabaseUrl, supabaseKey, {
+if (!supabaseKey) {
+  console.error("FATAL: Supabase Anon Key missing. Check your .env file.");
+}
+
+// Hardened client initialization
+export const supabase = createClient(supabaseUrl || '', supabaseKey || '', {
   auth: {
-    storageKey: 'kreol_tours_auth_token_v1', 
+    storageKey: 'kreol_island_auth_v2', // Versioned storage key to avoid conflicts
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true
-  }
+  },
+  global: {
+    headers: { 'x-application-name': 'kreolitt-legacy-spa' },
+  },
 });

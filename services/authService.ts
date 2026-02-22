@@ -37,14 +37,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Audit Fix: Only fallback if it's explicitly a "Not Found" error (new user).
         // If it's a network error or other issue, throw to prevent security degradation.
         if (error.code === 'PGRST116') {
-             console.warn('Profile not found for authenticated user, creating temporary client profile');
-             return {
-                id: sessionUser.id,
-                email: sessionUser.email!,
-                name: sessionUser.user_metadata?.name || sessionUser.email!.split('@')[0],
-                role: UserRole.CLIENT,
-                createdAt: sessionUser.created_at,
-             };
+          console.warn('Profile not found for authenticated user, creating temporary client profile');
+          return {
+            id: sessionUser.id,
+            email: sessionUser.email!,
+            name: sessionUser.user_metadata?.name || sessionUser.email!.split('@')[0],
+            role: UserRole.CLIENT,
+            createdAt: sessionUser.created_at,
+          };
         }
         throw error;
       }
@@ -54,6 +54,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         email: profile.email,
         name: profile.name,
         phone: profile.phone,
+        address: profile.address,
+        company: profile.company,
+        nationality: profile.nationality,
+        vatNumber: profile.vat_number,
         role: profile.role as UserRole,
         createdAt: profile.created_at,
       };
@@ -65,75 +69,67 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const refreshUser = async () => {
-     const { data: { session } } = await supabase.auth.getSession();
-     if (session?.user) {
-        const appUser = await mapSessionToUser(session.user);
-        setUser(appUser);
-     }
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user) {
+      const appUser = await mapSessionToUser(session.user);
+      setUser(appUser);
+    }
   };
 
   useEffect(() => {
     let mounted = true;
 
     // 1. Set up Auth Listener
+    // We rely primarily on INITIAL_SESSION and SIGNED_IN events to handle both mount and subsequent changes.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return;
-      
-      console.log(`Auth state change: ${event}`);
 
-      if (event === 'PASSWORD_RECOVERY') {
-         // Fix: Handle password recovery event specifically
-         // Redirect to update-password page using hash (since we use HashRouter)
-         // This avoids double-hash issues with redirectTo deep links
-         window.location.hash = '/update-password';
-      }
+      console.log(`[Auth] Event: ${event}`);
 
-      if (event === 'TOKEN_REFRESH_BROKEN') {
-         await supabase.auth.signOut();
-         setUser(null);
-         setIsLoading(false);
-         return;
-      }
-
-      if (event === 'SIGNED_OUT') {
-         setUser(null);
-         setIsLoading(false);
-         return;
-      }
-
-      if (session?.user) {
-         const appUser = await mapSessionToUser(session.user);
-         if (mounted) setUser(appUser);
-      } else if (!session) {
-         if (mounted) setUser(null);
-      }
-
-      if (mounted) setIsLoading(false);
-    });
-
-    // 2. Initial manual check
-    const checkSession = async () => {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        if (error) throw error;
-        
-        if (mounted) {
-           if (session?.user) {
+        switch (event as any) {
+          case 'SIGNED_IN':
+          case 'INITIAL_SESSION':
+          case 'USER_UPDATED':
+            if (session?.user) {
               const appUser = await mapSessionToUser(session.user);
-              setUser(appUser);
-           } else {
-              setUser(null);
-           }
+              if (mounted) {
+                if (appUser) {
+                  setUser(appUser);
+                } else {
+                  // SAFETY VALVE: Profile load failed but session is active.
+                  // This creates a "stuck" state. We must clear the session to allow a clean retry.
+                  console.error("[Auth] Ghost session detected. Profile fetch failed while session is active. Clearing session...");
+                  await supabase.auth.signOut();
+                  setUser(null);
+                }
+              }
+            } else {
+              if (mounted) setUser(null);
+            }
+            break;
+
+          case 'SIGNED_OUT':
+            if (mounted) setUser(null);
+            break;
+
+          case 'TOKEN_REFRESH_BROKEN':
+            console.warn("[Auth] Token refresh failed, signing out...");
+            await supabase.auth.signOut();
+            if (mounted) setUser(null);
+            break;
+
+          case 'PASSWORD_RECOVERY':
+            // Redirect using hash for HashRouter
+            window.location.hash = '/update-password';
+            break;
         }
-      } catch (error) {
-        console.error("Initial session check failed:", error);
-        if (mounted) setUser(null);
+      } catch (err) {
+        console.error("[Auth] Error in onAuthStateChange handler:", err);
       } finally {
         if (mounted) setIsLoading(false);
       }
-    };
-
-    checkSession();
+    });
 
     return () => {
       mounted = false;
@@ -143,7 +139,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string): Promise<User> => {
     setIsLoading(true);
-    
+
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -160,9 +156,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(appUser);
         return appUser;
       }
-      throw new Error("Unable to load user profile. Please try again.");
+
+      // SAFETY VALVE: Login succeeded but profile failed.
+      // Clear the session immediately to prevent a stuck state.
+      await supabase.auth.signOut();
+      setIsLoading(false);
+      throw new Error("Unable to load user profile. Your session has been cleared. Please try logging in again.");
     }
-    
+
     throw new Error("Login failed");
   };
 
@@ -184,10 +185,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     if (data.session) {
-       const appUser = await mapSessionToUser(data.session.user);
-       if(appUser) setUser(appUser);
+      const appUser = await mapSessionToUser(data.session.user);
+      if (appUser) setUser(appUser);
     }
-    
+
     setIsLoading(false);
   };
 
@@ -197,9 +198,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // (e.g. site.com/#/update-password#access_token=...) if deep link is specified.
     // We rely on onAuthStateChange('PASSWORD_RECOVERY') to handle routing.
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: window.location.origin 
+      redirectTo: window.location.origin
     });
-    
+
     setIsLoading(false);
     if (error) throw error;
   };
@@ -216,7 +217,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await supabase.auth.signOut();
     setUser(null);
     setIsLoading(false);
-    window.location.href = '/'; 
+    window.location.href = '/';
   };
 
   return React.createElement(
