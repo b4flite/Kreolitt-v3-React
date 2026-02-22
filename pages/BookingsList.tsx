@@ -204,7 +204,7 @@ const BookingsList: React.FC = () => {
 
     return (
         <div>
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4 print:hidden">
                 <div>
                     <h1 className="text-3xl font-display font-bold text-island-navy tracking-tight">Itinerary Board</h1>
                     <div className="text-sm text-island-muted mt-1 font-medium"><span className="text-island-navy font-bold">{totalCount}</span> active bookings managed</div>
@@ -219,14 +219,14 @@ const BookingsList: React.FC = () => {
                 </div>
             </div>
 
-            <div className="min-h-[500px]">
+            <div className="min-h-[500px] print:hidden">
                 {viewMode === 'list' ? <ListView bookings={bookings} onSelect={setSelectedBooking} /> :
                     viewMode === 'board' ? <BoardView bookings={bookings} onSelect={setSelectedBooking} /> :
                         <div className="text-center py-20 bg-white rounded-3xl border border-island-sand shadow-sm text-island-muted font-display">Calendar View Coming Soon</div>}
             </div>
 
             {viewMode === 'list' && totalPages > 1 && (
-                <div className="flex justify-between items-center mt-6 bg-white p-3 rounded-2xl border border-island-sand shadow-sm">
+                <div className="flex justify-between items-center mt-6 bg-white p-3 rounded-2xl border border-island-sand shadow-sm print:hidden">
                     <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="flex items-center px-4 py-2 text-sm font-medium text-island-navy bg-white border border-island-sand rounded-xl hover:bg-island-sand disabled:opacity-50">
                         <ChevronLeftIcon className="w-4 h-4 mr-2" /> Previous
                     </button>

@@ -78,39 +78,52 @@ export const bookingService = {
     };
   },
 
-  getBookingOptions: async (): Promise<Booking[]> => {
-     const { data, error } = await supabase
-       .from('bookings')
-       .select('id, client_name, amount, status, pickup_time, email, currency')
-       .order('pickup_time', { ascending: false });
-     
-     if(error) throw error;
-     return data.map((row: any) => ({
-         ...row,
-         clientName: row.client_name,
-         currency: row.currency || 'SCR',
-         clientId: '', 
-         serviceType: ServiceType.TRANSFER, 
-         pickupLocation: '',
-         dropoffLocation: '',
-         pickupTime: row.pickup_time,
-         pax: 0,
-         history: []
-     }));
+  getBookingOptions: async (limit: number = 50): Promise<Booking[]> => {
+    const { data, error } = await supabase
+      .from('bookings')
+      .select('id, client_name, amount, status, pickup_time, email, currency')
+      .order('pickup_time', { ascending: false })
+      .limit(limit);
+
+    if (error) throw error;
+    return data.map((row: any) => ({
+      ...row,
+      clientName: row.client_name,
+      currency: row.currency || 'SCR',
+      clientId: '',
+      serviceType: ServiceType.TRANSFER,
+      pickupLocation: '',
+      dropoffLocation: '',
+      pickupTime: row.pickup_time,
+      pax: 0,
+      history: []
+    }));
   },
 
   getBookingStats: async () => {
-     const { data, error } = await supabase.from('bookings').select('status');
-     if(error) throw error;
-     
-     const pending = data.filter(b => b.status === BookingStatus.PENDING).length;
-     const confirmed = data.filter(b => b.status === BookingStatus.CONFIRMED).length;
-     
-     return { pending, confirmed };
+    // Fetch counts in parallel for zero-egress status monitoring
+    const [pendingCount, confirmedCount] = await Promise.all([
+      supabase.from('bookings').select('*', { count: 'exact', head: true }).eq('status', BookingStatus.PENDING),
+      supabase.from('bookings').select('*', { count: 'exact', head: true }).eq('status', BookingStatus.CONFIRMED)
+    ]);
+
+    if (pendingCount.error) throw pendingCount.error;
+    if (confirmedCount.error) throw confirmedCount.error;
+
+    return {
+      pending: pendingCount.count || 0,
+      confirmed: confirmedCount.count || 0
+    };
   },
 
-  getClientBookings: async (clientId: string, email?: string): Promise<Booking[]> => {
-    let query = supabase.from('bookings').select('*').order('pickup_time', { ascending: true });
+  getClientBookings: async (clientId: string, email?: string, page: number = 1, limit: number = 20): Promise<Booking[]> => {
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
+    let query = supabase.from('bookings')
+      .select('*')
+      .order('pickup_time', { ascending: true })
+      .range(from, to);
 
     // Normalize input to prevent whitespace mismatches
     const safeEmail = email ? email.trim() : null;
@@ -123,7 +136,7 @@ export const bookingService = {
     } else if (safeEmail) {
       query = query.ilike('email', safeEmail);
     }
-    
+
     const { data, error } = await query;
     if (error) throw error;
     return (data || []).map(mapRowToBooking);
@@ -131,19 +144,19 @@ export const bookingService = {
 
   createBooking: async (data: BookingInput, clientId?: string, creatorName?: string): Promise<Booking> => {
     const validated = bookingSchema.parse(data);
-    
+
     // Audit Fix: Dynamic Pricing instead of hardcoded 1200/3000
     let amount = validated.amount;
     if (amount === undefined) {
-        const settings = await settingsService.getSettings();
-        amount = validated.serviceType === ServiceType.TOUR 
-            ? settings.defaultTourPrice 
-            : settings.defaultTransferPrice;
+      const settings = await settingsService.getSettings();
+      amount = validated.serviceType === ServiceType.TOUR
+        ? settings.defaultTourPrice
+        : settings.defaultTransferPrice;
     }
 
     const currency = (validated.currency || 'SCR') as CurrencyCode;
     const newId = generateUUID();
-    
+
     // Normalize email to ensure better matching
     const normalizedEmail = validated.email.toLowerCase().trim();
 
@@ -151,51 +164,51 @@ export const bookingService = {
     const safeNotes = validated.notes ? sanitizeInput(validated.notes) : undefined;
 
     const initialHistory: BookingHistoryEntry[] = [{
-        timestamp: new Date().toISOString(),
-        action: 'CREATED',
-        details: 'Initial creation',
-        user: creatorName || 'System'
+      timestamp: new Date().toISOString(),
+      action: 'CREATED',
+      details: 'Initial creation',
+      user: creatorName || 'System'
     }];
 
     const safeClientId = (clientId && clientId.length > 20) ? clientId : null;
 
     const dbPayload = {
-        id: newId,
-        client_id: safeClientId,
-        client_name: validated.clientName,
-        email: normalizedEmail,
-        phone: validated.phone || null,
-        service_type: validated.serviceType,
-        pickup_location: validated.pickupLocation,
-        dropoff_location: validated.dropoffLocation,
-        pickup_time: validated.pickupTime,
-        pax: validated.pax,
-        status: validated.status || BookingStatus.PENDING,
-        amount: amount,
-        currency: currency,
-        notes: safeNotes,
-        history: initialHistory
+      id: newId,
+      client_id: safeClientId,
+      client_name: validated.clientName,
+      email: normalizedEmail,
+      phone: validated.phone || null,
+      service_type: validated.serviceType,
+      pickup_location: validated.pickupLocation,
+      dropoff_location: validated.dropoffLocation,
+      pickup_time: validated.pickupTime,
+      pax: validated.pax,
+      status: validated.status || BookingStatus.PENDING,
+      amount: amount,
+      currency: currency,
+      notes: safeNotes,
+      history: initialHistory
     };
 
     const { error } = await supabase.from('bookings').insert(dbPayload);
     if (error) throw error;
-    
+
     const newBooking: Booking = {
-        id: newId,
-        clientId: safeClientId || 'guest',
-        clientName: validated.clientName,
-        email: normalizedEmail,
-        phone: validated.phone,
-        serviceType: validated.serviceType,
-        pickupLocation: validated.pickupLocation,
-        dropoffLocation: validated.dropoffLocation,
-        pickupTime: validated.pickupTime,
-        pax: validated.pax,
-        status: validated.status || BookingStatus.PENDING,
-        amount: amount!,
-        currency: currency,
-        notes: safeNotes,
-        history: initialHistory
+      id: newId,
+      clientId: safeClientId || 'guest',
+      clientName: validated.clientName,
+      email: normalizedEmail,
+      phone: validated.phone,
+      serviceType: validated.serviceType,
+      pickupLocation: validated.pickupLocation,
+      dropoffLocation: validated.dropoffLocation,
+      pickupTime: validated.pickupTime,
+      pax: validated.pax,
+      status: validated.status || BookingStatus.PENDING,
+      amount: amount!,
+      currency: currency,
+      notes: safeNotes,
+      history: initialHistory
     };
 
     emailService.sendBookingConfirmation(newBooking);
@@ -206,15 +219,15 @@ export const bookingService = {
     const { data: current } = await supabase.from('bookings').select('*').eq('id', id).single();
     if (!current) throw new Error("Booking not found");
 
-    const updates: any = { 
-        status, 
-        history: [{
-            timestamp: new Date().toISOString(),
-            action: 'STATUS_CHANGE',
-            user: 'Manager',
-            details: `Status changed to ${status}${price ? `. Price set to ${price}` : ''}`,
-            previousState: { status: current.status as BookingStatus, amount: current.amount }
-        }, ...(current.history || [])]
+    const updates: any = {
+      status,
+      history: [{
+        timestamp: new Date().toISOString(),
+        action: 'STATUS_CHANGE',
+        user: 'Manager',
+        details: `Status changed to ${status}${price ? `. Price set to ${price}` : ''}`,
+        previousState: { status: current.status as BookingStatus, amount: current.amount }
+      }, ...(current.history || [])]
     };
     if (price !== undefined) updates.amount = price;
 
@@ -224,14 +237,14 @@ export const bookingService = {
     const updatedBooking = { ...mapRowToBooking(current), status, amount: price ?? current.amount };
 
     if (status === BookingStatus.CONFIRMED || status === BookingStatus.CANCELLED) {
-       emailService.sendBookingStatusUpdate(updatedBooking);
+      emailService.sendBookingStatusUpdate(updatedBooking);
     }
 
     if (status === BookingStatus.CONFIRMED) {
       try {
         const settings = await settingsService.getSettings();
         if (settings.autoCreateInvoice) {
-           await financeService.createInvoiceFromBooking(updatedBooking, settings.vatRate);
+          await financeService.createInvoiceFromBooking(updatedBooking, settings.vatRate);
         }
       } catch (err) {
         console.error("Auto-invoice generation failed:", err);
@@ -240,29 +253,29 @@ export const bookingService = {
   },
 
   updateBookingDetails: async (id: string, updates: Partial<Booking>): Promise<void> => {
-     const { data: current } = await supabase.from('bookings').select('*').eq('id', id).single();
-     if (!current) throw new Error("Booking not found");
+    const { data: current } = await supabase.from('bookings').select('*').eq('id', id).single();
+    if (!current) throw new Error("Booking not found");
 
-      const dbUpdates: any = {
-          ...(updates.clientName && { client_name: updates.clientName }),
-          ...(updates.email && { email: updates.email.toLowerCase().trim() }),
-          ...(updates.phone && { phone: updates.phone }),
-          ...(updates.serviceType && { service_type: updates.serviceType }),
-          ...(updates.pax && { pax: updates.pax }),
-          ...(updates.amount && { amount: updates.amount }),
-          ...(updates.currency && { currency: updates.currency }),
-          ...(updates.pickupTime && { pickup_time: updates.pickupTime }),
-          ...(updates.pickupLocation && { pickup_location: updates.pickupLocation }),
-          ...(updates.dropoffLocation && { dropoff_location: updates.dropoffLocation }),
-          ...(updates.notes && { notes: sanitizeInput(updates.notes || '') }),
-      };
+    const dbUpdates: any = {
+      ...(updates.clientName && { client_name: updates.clientName }),
+      ...(updates.email && { email: updates.email.toLowerCase().trim() }),
+      ...(updates.phone && { phone: updates.phone }),
+      ...(updates.serviceType && { service_type: updates.serviceType }),
+      ...(updates.pax && { pax: updates.pax }),
+      ...(updates.amount && { amount: updates.amount }),
+      ...(updates.currency && { currency: updates.currency }),
+      ...(updates.pickupTime && { pickup_time: updates.pickupTime }),
+      ...(updates.pickupLocation && { pickup_location: updates.pickupLocation }),
+      ...(updates.dropoffLocation && { dropoff_location: updates.dropoffLocation }),
+      ...(updates.notes && { notes: sanitizeInput(updates.notes || '') }),
+    };
 
-      const { error } = await supabase.from('bookings').update(dbUpdates).eq('id', id);
-      if (error) throw error;
+    const { error } = await supabase.from('bookings').update(dbUpdates).eq('id', id);
+    if (error) throw error;
   },
 
   deleteBooking: async (id: string): Promise<void> => {
     const { error } = await supabase.from('bookings').delete().eq('id', id);
-    if(error) throw error;
+    if (error) throw error;
   }
 };

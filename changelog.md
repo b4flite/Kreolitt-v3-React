@@ -1,6 +1,19 @@
 # Changelog
 
-## [2.2.8] - 2024-05-24
+## [2.2.10] - 2026-02-22
+### Refined
+- **Professional Print View**: Applied `print:hidden` to all layout headers, sidebars, page banners, and view toggles. This ensures that only the invoice/report content is visible on printed PDFs.
+- **UI Consistency**: Hidden the `BookingDetailPanel` overlay during print operations.
+- **Code Health**: Fixed query function signatures in `Dashboard.tsx` to align with the refactored services.
+
+## [2.2.9] - 2026-02-22
+### Optimized
+- **Supabase Egress**: Refactored major services to use server-side counts (`head: true`) and range-based pagination.
+- **Dashboard Performance**: Implemented date-filtered financial stats to prevent unbounded historical data fetching.
+- **User Management**: Added pagination to the users list in `UsersPage`.
+- **Finance Record**: Added pagination to the expenses list in `FinancePage`.
+
+## [2.2.8] - 2026-02-22
 ### Professional Refinements
 - **Invoice Printing**: Implemented dedicated print-view styling. Hidden unnecessary UI elements (sidebar, headers, buttons) during printing to ensure a clean, professional invoice document.
 - **Improved Workflow**: Made the "Invoice Generated" status in the Booking Detail Panel clickable, allowing managers to view/print invoices directly from the booking inspector.

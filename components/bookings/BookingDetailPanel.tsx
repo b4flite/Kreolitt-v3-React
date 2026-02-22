@@ -55,7 +55,7 @@ export const BookingDetailPanel: React.FC<BookingDetailPanelProps> = ({
     };
 
     return (
-        <div className="fixed inset-0 z-50 overflow-hidden">
+        <div className="fixed inset-0 z-50 overflow-hidden print:hidden">
             <div className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity" onClick={onClose}></div>
             <div className="absolute inset-y-0 right-0 max-w-2xl w-full bg-white shadow-2xl transform transition-transform flex flex-col h-full animate-in slide-in-from-right-10">
 

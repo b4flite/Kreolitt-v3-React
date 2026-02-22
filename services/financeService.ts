@@ -100,11 +100,12 @@ export const financeService = {
     };
   },
 
-  getClientInvoices: async (): Promise<Invoice[]> => {
+  getClientInvoices: async (limit: number = 50): Promise<Invoice[]> => {
     const { data, error } = await supabase
       .from('invoices')
       .select('*')
-      .order('date', { ascending: false });
+      .order('date', { ascending: false })
+      .limit(limit);
 
     if (error) throw error;
     return (data || []).map(mapRowToInvoice);
@@ -225,10 +226,21 @@ export const financeService = {
     return mapRowToInvoice(data);
   },
 
-  getAllExpenses: async (): Promise<Expense[]> => {
-    const { data, error } = await supabase.from('expenses').select('*').order('date', { ascending: false });
+  getAllExpenses: async (page: number = 1, limit: number = 50): Promise<{ data: Expense[], count: number }> => {
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
+    const { data, count, error } = await supabase
+      .from('expenses')
+      .select('*', { count: 'exact' })
+      .order('date', { ascending: false })
+      .range(from, to);
+
     if (error) throw error;
-    return data.map(mapRowToExpense);
+    return {
+      data: (data || []).map(mapRowToExpense),
+      count: count || 0
+    };
   },
 
   addExpense: async (expense: Omit<Expense, 'id' | 'vatAmount'>, vatRate: number = SEYCHELLES_VAT_RATE_DEFAULT, options?: AddExpenseOptions): Promise<Expense> => {
@@ -287,8 +299,11 @@ export const financeService = {
     if (error) throw error;
   },
 
-  getStats: async () => {
-    // Fetch dynamic exchange rates from settings
+  getStats: async (startDate?: string) => {
+    // Audit Fix: Apply date filter to prevent unbounded historical fetch
+    // Default to current year if not provided
+    const effectiveStartDate = startDate || `${new Date().getFullYear()}-01-01`;
+
     const settings = await settingsService.getSettings();
     const rates: Record<CurrencyCode, number> = {
       SCR: 1,
@@ -296,18 +311,26 @@ export const financeService = {
       USD: settings.usdRate || 14.1
     };
 
-    const { data: invoices } = await supabase.from('invoices').select('total, tax_amount, paid, currency');
-    const { data: expenses } = await supabase.from('expenses').select('amount, vat_amount, currency');
+    const [invoicesResult, expensesResult] = await Promise.all([
+      supabase.from('invoices')
+        .select('total, tax_amount, paid, currency')
+        .gte('date', effectiveStartDate),
+      supabase.from('expenses')
+        .select('amount, vat_amount, currency')
+        .gte('date', effectiveStartDate)
+    ]);
 
-    const invs = invoices || [];
-    const exps = expenses || [];
+    if (invoicesResult.error) throw invoicesResult.error;
+    if (expensesResult.error) throw expensesResult.error;
+
+    const invs = invoicesResult.data || [];
+    const exps = expensesResult.data || [];
 
     const convertToBase = (amount: number, currency: string): number => {
       const code = (currency || 'SCR') as CurrencyCode;
       return amount * (rates[code] || 1);
     };
 
-    // Aggregate in SCR (Base Currency) using dynamic rates
     const totalRevenue = invs.reduce((acc, curr) => acc + convertToBase(curr.total, curr.currency), 0);
     const totalOutputTax = invs.reduce((acc, curr) => acc + convertToBase(curr.tax_amount, curr.currency), 0);
     const totalExpenses = exps.reduce((acc, curr) => acc + convertToBase(curr.amount, curr.currency), 0);
@@ -323,6 +346,7 @@ export const financeService = {
       totalInputTax,
       vatPayable,
       netProfit,
+      startDate: effectiveStartDate,
       pendingInvoices: invs.filter(i => !i.paid).length
     };
   }

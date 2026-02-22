@@ -2,27 +2,33 @@ import { supabase } from '../lib/supabaseClient';
 import { User, UserRole } from '../types';
 
 export const userService = {
-  getAllUsers: async (): Promise<User[]> => {
-    const { data, error } = await supabase
+  getAllUsers: async (page: number = 1, limit: number = 50): Promise<{ data: User[], count: number }> => {
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
+    const { data, count, error } = await supabase
       .from('profiles')
-      .select('*')
-      .order('created_at', { ascending: false });
+      .select('*', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range(from, to);
 
     if (error) throw error;
 
-    // Map DB Profile to User Type
-    return data.map((u: any) => ({
-      id: u.id,
-      email: u.email,
-      name: u.name,
-      phone: u.phone,
-      address: u.address,
-      company: u.company,
-      nationality: u.nationality,
-      vatNumber: u.vat_number,
-      role: u.role as UserRole,
-      createdAt: u.created_at
-    }));
+    return {
+      data: (data || []).map((u: any) => ({
+        id: u.id,
+        email: u.email,
+        name: u.name,
+        phone: u.phone,
+        address: u.address,
+        company: u.company,
+        nationality: u.nationality,
+        vatNumber: u.vat_number,
+        role: u.role as UserRole,
+        createdAt: u.created_at
+      })),
+      count: count || 0
+    };
   },
 
   updateUserRole: async (id: string, role: UserRole): Promise<void> => {

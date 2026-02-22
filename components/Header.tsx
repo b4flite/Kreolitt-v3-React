@@ -24,7 +24,7 @@ export const Header: React.FC<HeaderProps> = ({ transparent = false }) => {
   const isHome = location.pathname === '/';
 
   return (
-    <header className={`w-full z-50 transition-all duration-300 ${transparent
+    <header className={`w-full z-50 transition-all duration-300 print:hidden ${transparent
       ? 'absolute top-0 left-0 bg-transparent py-6'
       : 'bg-white shadow-sm border-b border-gray-100 py-4 relative'
       }`}>

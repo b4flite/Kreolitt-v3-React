@@ -231,8 +231,8 @@ export const settingsService = {
   },
 
   // --- GALLERY ---
-  getGallery: async (): Promise<GalleryImage[]> => {
-    const { data, error } = await supabase.from('gallery').select('*');
+  getGallery: async (limit: number = 100): Promise<GalleryImage[]> => {
+    const { data, error } = await supabase.from('gallery').select('*').limit(limit);
     if (error) throw error;
     return data.map((d: any) => ({
       id: d.id,
