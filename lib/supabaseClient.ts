@@ -34,3 +34,9 @@ export const supabase = createClient(supabaseUrl || '', supabaseKey || '', {
     headers: { 'x-application-name': 'kreolitt-legacy-spa' },
   },
 });
+
+// Connection Diagnostic
+if (supabaseUrl && supabaseKey) {
+  const projectRef = supabaseUrl.split('.')[0].split('//')[1];
+  console.log(`[Supabase] Initialized for project: ${projectRef}`);
+}
