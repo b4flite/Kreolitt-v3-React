@@ -38,6 +38,10 @@ create table if not exists public.profiles (
 
 -- Migrations for Profile
 alter table public.profiles add column if not exists phone text;
+alter table public.profiles add column if not exists address text;
+alter table public.profiles add column if not exists company text;
+alter table public.profiles add column if not exists nationality text;
+alter table public.profiles add column if not exists vat_number text;
 
 -- 4. BOOKINGS
 create table if not exists public.bookings (
