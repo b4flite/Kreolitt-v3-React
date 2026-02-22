@@ -20,6 +20,7 @@ const AdvertsPage = React.lazy(() => import('./pages/AdvertsPage'));
 const GalleryPage = React.lazy(() => import('./pages/GalleryPage'));
 const ReportsPage = React.lazy(() => import('./pages/ReportsPage'));
 const ServicesCMSPage = React.lazy(() => import('./pages/ServicesCMSPage'));
+const ProfilePage = React.lazy(() => import('./pages/ProfilePage'));
 
 const App: React.FC = () => {
   return (
@@ -73,7 +74,7 @@ const App: React.FC = () => {
                 </PrivateLayout>
               }
             />
-            
+
             {/* Content Modules - Admin Only */}
             <Route
               path="/services-cms"
@@ -113,6 +114,14 @@ const App: React.FC = () => {
               element={
                 <PrivateLayout allowedRoles={[UserRole.CLIENT]}>
                   <ClientPortal />
+                </PrivateLayout>
+              }
+            />
+            <Route
+              path="/portal/profile"
+              element={
+                <PrivateLayout allowedRoles={[UserRole.CLIENT]}>
+                  <ProfilePage />
                 </PrivateLayout>
               }
             />

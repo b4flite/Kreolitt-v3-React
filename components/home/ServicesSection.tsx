@@ -55,7 +55,7 @@ export const ServicesSection: React.FC<ServicesSectionProps> = ({ services, onSe
                                         {service.price}
                                     </div>
                                 )}
-                                <div className={`w-14 h-14 bg-opacity-10 rounded-full flex items-center justify-center mb-6 transition-colors ${colors.text} hover:${colors.bg} hover:text-white`}>
+                                <div className={`w-14 h-14 bg-opacity-10 rounded-full flex items-center justify-center mb-6 group-hover:text-white transition-colors ${colors.text} group-hover:${colors.bg}`}>
                                     <IconComponent className="w-8 h-8" />
                                 </div>
                                 <h3 className="text-xl font-bold mb-3">{service.title}</h3>

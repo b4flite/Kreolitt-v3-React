@@ -149,7 +149,7 @@ const HomePage: React.FC = () => {
           </div>
           <div className="border-t border-gray-800 pt-8 text-center text-gray-500 text-xs flex flex-col items-center">
             <p className="mb-2">&copy; {new Date().getFullYear()} {settings?.name}. All rights reserved.</p>
-            <p className="font-mono text-[10px] opacity-60">v2.1.3 | Developed by JBVservices</p>
+            <p className="font-mono text-[10px] opacity-60 tracking-wider">v3.0.0 (Synchronized) | Precision Crafted by JBVservices</p>
           </div>
         </div>
       </footer>
