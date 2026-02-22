@@ -3,8 +3,8 @@ import { createClient } from '@supabase/supabase-js';
 // Secure access to Vite environment variables
 // Note: We use static access because Vite's production optimizer 
 // doesn't support dynamic string access for import.meta.env
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY;
+const supabaseUrl = (import.meta as any).env.VITE_SUPABASE_URL;
+const supabaseKey = (import.meta as any).env.VITE_SUPABASE_ANON_KEY || (import.meta as any).env.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY;
 
 if (!supabaseUrl || supabaseUrl === 'undefined') {
   console.error("FATAL: Supabase URL missing. Vite did not bake the URL into this build.");
