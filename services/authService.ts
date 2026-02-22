@@ -28,17 +28,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log(`[Auth] Mapping session for ${sessionUser.email}...`);
 
-      // Fetch the profile data. We select specific fields to be resilient 
-      // if some (like company/address) are missing from the schema.
-      const { data: profile, error } = await supabase
+      // Fetch core profile data first (essential for access)
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('id, email, name, phone, role, created_at')
         .eq('id', sessionUser.id)
         .single();
 
-      if (error) {
-        if (error.code === 'PGRST116') {
-          console.warn('[Auth] Profile not found, creating temporary profile');
+      if (profileError) {
+        if (profileError.code === 'PGRST116') {
+          console.warn('[Auth] Profile not found, creating temporary fallback');
           return {
             id: sessionUser.id,
             email: sessionUser.email!,
@@ -47,31 +46,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             createdAt: sessionUser.created_at,
           };
         }
-        throw error;
+        // If it's another error (like connection), return null but log it
+        console.error("[Auth] Core profile fetch failed:", profileError);
+        return null;
       }
 
-      // Second pass for extended fields (to avoid failing the whole login if these columns don't exist yet)
-      const { data: extProfile } = await supabase
-        .from('profiles')
-        .select('address, company, nationality, vat_number')
-        .eq('id', sessionUser.id)
-        .single();
+      // Extended fields - wrap in another try/catch so missing columns don't break login
+      let extProfile: any = null;
+      try {
+        const { data } = await supabase
+          .from('profiles')
+          .select('address, company, nationality, vat_number')
+          .eq('id', sessionUser.id)
+          .single();
+        extProfile = data;
+      } catch (e) {
+        console.warn("[Auth] Extended profile fields failed (expected if db not migrated):", e);
+      }
 
       return {
         id: profile.id,
         email: profile.email,
         name: profile.name,
         phone: profile.phone,
-        address: extProfile?.address,
-        company: extProfile?.company,
-        nationality: extProfile?.nationality,
-        vatNumber: extProfile?.vat_number,
+        address: extProfile?.address || '',
+        company: extProfile?.company || '',
+        nationality: extProfile?.nationality || '',
+        vatNumber: extProfile?.vat_number || '',
         role: profile.role as UserRole,
         createdAt: profile.created_at,
       };
     } catch (err) {
-      console.error("[Auth] mapSessionToUser failed critical path:", err);
-      return null;
+      console.error("[Auth] Critical error in mapping profile:", err);
+      // Fallback to basic info from session if everything else fails
+      return {
+        id: sessionUser.id,
+        email: sessionUser.email!,
+        name: sessionUser.user_metadata?.name || sessionUser.email!.split('@')[0],
+        role: UserRole.CLIENT,
+        createdAt: sessionUser.created_at,
+      };
     }
   };
 
