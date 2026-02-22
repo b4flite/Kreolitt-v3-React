@@ -7,12 +7,13 @@ interface EditProfileModalProps {
     user: User | null;
     onClose: () => void;
     onUpdate: (data: any) => Promise<void>;
+    passwordOnly?: boolean;
 }
 
-export const EditProfileModal: React.FC<EditProfileModalProps> = ({ user, onClose, onUpdate }) => {
+export const EditProfileModal: React.FC<EditProfileModalProps> = ({ user, onClose, onUpdate, passwordOnly = false }) => {
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
-    const [showPasswordFields, setShowPasswordFields] = useState(false);
+    const [showPasswordFields, setShowPasswordFields] = useState(passwordOnly);
     const [error, setError] = useState<string | null>(null);
 
     const { register, handleSubmit, formState: { isSubmitting } } = useForm({
@@ -50,7 +51,9 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ user, onClos
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm">
             <div className="bg-white rounded-xl w-full max-w-md p-6 shadow-2xl">
                 <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-lg font-bold text-gray-900">Edit Profile</h3>
+                    <h3 className="text-lg font-bold text-gray-900">
+                        {passwordOnly ? 'Change Password' : 'Edit Profile'}
+                    </h3>
                     <button onClick={onClose}><XMarkIcon className="w-5 h-5 text-gray-400" /></button>
                 </div>
 
@@ -61,35 +64,41 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({ user, onClos
                 )}
 
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 max-h-[80vh] overflow-y-auto pr-2">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-                        <input {...register("name")} className="w-full border p-2.5 rounded-lg text-sm" />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-                        <input {...register("phone")} className="w-full border p-2.5 rounded-lg text-sm" />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Company / Business Name</label>
-                        <input {...register("company")} className="w-full border p-2.5 rounded-lg text-sm" />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
-                        <textarea {...register("address")} rows={2} className="w-full border p-2.5 rounded-lg text-sm" />
-                    </div>
+                    {!passwordOnly && (
+                        <>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                                <input {...register("name")} className="w-full border p-2.5 rounded-lg text-sm" />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                                <input {...register("phone")} className="w-full border p-2.5 rounded-lg text-sm" />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Company / Business Name</label>
+                                <input {...register("company")} className="w-full border p-2.5 rounded-lg text-sm" />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                                <textarea {...register("address")} rows={2} className="w-full border p-2.5 rounded-lg text-sm" />
+                            </div>
+                        </>
+                    )}
 
-                    <div className="pt-4 border-t border-gray-100">
+                    <div className={!passwordOnly ? "pt-4 border-t border-gray-100" : ""}>
                         <div className="flex items-center justify-between mb-2">
                             <h4 className="flex items-center text-xs font-bold text-gray-400 uppercase tracking-wider">
                                 <LockClosedIcon className="w-3 h-3 mr-1" /> Security
                             </h4>
-                            <button
-                                type="button"
-                                onClick={() => setShowPasswordFields(!showPasswordFields)}
-                                className="text-[10px] text-sey-blue font-bold hover:underline"
-                            >
-                                {showPasswordFields ? 'Cancel' : 'Change Password?'}
-                            </button>
+                            {!passwordOnly && (
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPasswordFields(!showPasswordFields)}
+                                    className="text-[10px] text-sey-blue font-bold hover:underline"
+                                >
+                                    {showPasswordFields ? 'Cancel' : 'Change Password?'}
+                                </button>
+                            )}
                         </div>
 
                         {showPasswordFields && (

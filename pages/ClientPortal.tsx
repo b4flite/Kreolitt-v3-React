@@ -70,7 +70,7 @@ const ClientPortal: React.FC = () => {
     // Fetch Invoices
     const { data: invoices, isLoading: invoicesLoading } = useQuery({
         queryKey: ['my-invoices'],
-        queryFn: financeService.getClientInvoices,
+        queryFn: () => financeService.getClientInvoices(),
         enabled: !!user
     });
 
@@ -101,6 +101,7 @@ const ClientPortal: React.FC = () => {
             {isEditingProfile && (
                 <EditProfileModal
                     user={user}
+                    passwordOnly={true}
                     onClose={() => setIsEditingProfile(false)}
                     onUpdate={handleProfileUpdate}
                 />
