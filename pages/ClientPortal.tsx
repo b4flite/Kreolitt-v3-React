@@ -20,6 +20,7 @@ const ClientPortal: React.FC = () => {
     const { user, refreshUser, updatePassword } = useAuth();
     const queryClient = useQueryClient();
     const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+    const [isEditingProfile, setIsEditingProfile] = useState(false);
     const [isSyncing, setIsSyncing] = useState(false);
 
     // Self-healing: Sync legacy/guest bookings on load
@@ -44,6 +45,20 @@ const ClientPortal: React.FC = () => {
         }
     };
 
+    const handleProfileUpdate = async (data: any) => {
+        try {
+            if (data.password) {
+                await updatePassword(data.password);
+                toast.success("Password updated");
+            }
+            await userService.updateUserProfile(user!.id, data);
+            await refreshUser();
+            toast.success("Profile updated");
+            setIsEditingProfile(false);
+        } catch (err: any) {
+            toast.error(`Update failed: ${err.message}`);
+        }
+    };
 
     // Fetch Bookings
     const { data: bookings, isLoading: bookingsLoading } = useQuery({
@@ -72,6 +87,7 @@ const ClientPortal: React.FC = () => {
         <div className="max-w-4xl mx-auto space-y-6">
             <PortalHeader
                 user={user}
+                onEditProfile={() => setIsEditingProfile(true)}
             />
 
             <BookingList
@@ -81,6 +97,14 @@ const ClientPortal: React.FC = () => {
                 onManualSync={handleManualSync}
                 onViewInvoice={setSelectedInvoice}
             />
+
+            {isEditingProfile && (
+                <EditProfileModal
+                    user={user}
+                    onClose={() => setIsEditingProfile(false)}
+                    onUpdate={handleProfileUpdate}
+                />
+            )}
 
             {selectedInvoice && (
                 <InvoiceModal

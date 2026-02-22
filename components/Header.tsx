@@ -39,7 +39,7 @@ export const Header: React.FC<HeaderProps> = ({ transparent = false }) => {
           <Link
             to="/"
             className={`font-medium text-sm md:text-base transition-colors ${transparent ? 'text-white/90 hover:text-white' : 'text-gray-600 hover:text-sey-blue'
-              } ${isHome ? (transparent ? 'text-white underline' : 'text-sey-blue font-bold') : ''}`}
+              } ${isHome && transparent ? 'text-white underline' : ''}`}
           >
             Home
           </Link>
@@ -67,7 +67,7 @@ export const Header: React.FC<HeaderProps> = ({ transparent = false }) => {
           {user && (
             <button
               onClick={logout}
-              className={`hidden md:block text-sm font-medium transition-colors ${transparent ? 'text-white/70 hover:text-white' : 'text-gray-500 hover:text-sey-red'
+              className={`text-sm font-medium transition-colors ${transparent ? 'text-white/70 hover:text-white' : 'text-gray-500 hover:text-sey-red'
                 }`}
             >
               Sign Out
